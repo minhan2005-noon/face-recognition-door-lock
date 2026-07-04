@@ -2,36 +2,36 @@
 An AI-powered smart door lock system that uses facial recognition to identify authorized users and automatically unlock the door.
 # Face Recognition Door Lock
 
-An AI-powered smart door lock system that uses facial recognition technology to authenticate authorized users and automatically unlock a door. The system combines computer vision, embedded hardware, and IoT communication to provide a secure and convenient access control solution.
+Hệ thống khóa cửa thông minh sử dụng trí tuệ nhân tạo (AI) và công nghệ nhận diện khuôn mặt để xác thực người dùng được cấp quyền và tự động mở cửa. Dự án kết hợp thị giác máy tính (Computer Vision), phần cứng nhúng (Embedded Systems) và giao tiếp IoT nhằm mang lại giải pháp kiểm soát truy cập an toàn và tiện lợi.
 
-## Features
+## Tính năng
 
-* Real-time face detection and recognition
-* Automatic door unlocking for authorized users
-* User enrollment and face database management
-* Access logging and monitoring
-* Embedded hardware integration
-* Optional remote monitoring through a web dashboard
-* Support for camera modules such as ESP32-CAM or USB cameras
-* Secure authentication and access control
+* Phát hiện và nhận diện khuôn mặt theo thời gian thực.
+* Tự động mở khóa cửa cho người dùng được cấp quyền.
+* Đăng ký người dùng và quản lý cơ sở dữ liệu khuôn mặt.
+* Ghi nhật ký và giám sát lịch sử truy cập.
+* Tích hợp với phần cứng nhúng.
+* Hỗ trợ giám sát từ xa thông qua giao diện web (tùy chọn).
+* Hỗ trợ các mô-đun camera như ESP32-CAM hoặc camera USB.
+* Xác thực và kiểm soát truy cập an toàn.
 
-## System Architecture
+## Kiến trúc hệ thống
 
 ```text
 Camera
    │
    ▼
-Face Detection
+Phát hiện khuôn mặt
    │
    ▼
-Face Recognition
+Nhận diện khuôn mặt
    │
-   ├── Authorized User ──► Unlock Door
+   ├── Người dùng hợp lệ ──► Mở khóa cửa
    │
-   └── Unknown User ─────► Access Denied
+   └── Người lạ ───────────► Từ chối truy cập
 ```
 
-## Project Structure
+## Cấu trúc dự án
 
 ```text
 face-recognition-door-lock/
@@ -115,13 +115,13 @@ face-recognition-door-lock/
 └── README.md
 ```
 
-## Technologies
+## Công nghệ sử dụng
 
-### Artificial Intelligence
+### Trí tuệ nhân tạo (AI)
 
 * OpenCV
 * Face Recognition
-* Deep Learning Models
+* Mô hình học sâu (Deep Learning)
 * ONNX Runtime
 
 ### Backend
@@ -130,44 +130,44 @@ face-recognition-door-lock/
 * Express.js
 * REST API
 
-### Database
+### Cơ sở dữ liệu
 
 * MySQL / PostgreSQL
-* SQLite (for development)
+* SQLite (dành cho môi trường phát triển)
 
-### Embedded Systems
+### Hệ thống nhúng
 
 * ESP32-CAM
 * ESP32
-* Servo Motor / Electronic Door Lock
-* Relay Module
+* Servo Motor hoặc khóa điện tử
+* Mô-đun Relay
 
 ### Frontend
 
 * React
 * Vite
 
-## Workflow
+## Quy trình hoạt động
 
-1. Capture image from camera.
-2. Detect human face.
-3. Extract facial features.
-4. Compare with registered user database.
-5. Verify identity.
-6. Send unlock command to door controller.
-7. Record access event.
-8. Notify administrator if needed.
+1. Camera thu nhận hình ảnh khuôn mặt.
+2. Hệ thống phát hiện khuôn mặt trong ảnh.
+3. Trích xuất đặc trưng khuôn mặt.
+4. So sánh với dữ liệu người dùng đã đăng ký.
+5. Xác thực danh tính.
+6. Gửi lệnh mở khóa đến bộ điều khiển cửa.
+7. Ghi nhận lịch sử truy cập.
+8. Gửi thông báo cho quản trị viên (nếu cần).
 
-## Future Improvements
+## Hướng phát triển trong tương lai
 
-* Mobile application support
-* Multi-factor authentication
-* Cloud synchronization
-* Visitor management
-* Liveness detection against photo spoofing
-* Real-time notifications
-* Voice assistant integration
+* Hỗ trợ ứng dụng di động.
+* Xác thực đa lớp (Multi-Factor Authentication).
+* Đồng bộ dữ liệu lên đám mây.
+* Quản lý khách truy cập.
+* Phát hiện giả mạo bằng ảnh hoặc video (Liveness Detection).
+* Thông báo theo thời gian thực.
+* Tích hợp trợ lý giọng nói AI.
 
-## License
+## Giấy phép
 
-This project is licensed under the MIT License.
+Dự án được phát hành theo giấy phép MIT License.
