@@ -1,19 +1,19 @@
-# face-recognition-door-lock
-An AI-powered smart door lock system that uses facial recognition to identify authorized users and automatically unlock the door.
-# Face Recognition Door Lock
+# Khóa cửa nhận diện khuôn mặt
 
-Hệ thống khóa cửa thông minh sử dụng trí tuệ nhân tạo (AI) và công nghệ nhận diện khuôn mặt để xác thực người dùng được cấp quyền và tự động mở cửa. Dự án kết hợp thị giác máy tính (Computer Vision), phần cứng nhúng (Embedded Systems) và giao tiếp IoT nhằm mang lại giải pháp kiểm soát truy cập an toàn và tiện lợi.
+Dự án này xây dựng hệ thống khóa cửa thông minh dùng trí tuệ nhân tạo để nhận diện khuôn mặt người dùng được cấp quyền và tự động mở cửa.
+
+Hệ thống kết hợp thị giác máy tính, phần cứng nhúng và giao tiếp IoT để tạo một giải pháp kiểm soát ra vào an toàn, thuận tiện và có thể mở rộng.
 
 ## Tính năng
 
-* Phát hiện và nhận diện khuôn mặt theo thời gian thực.
-* Tự động mở khóa cửa cho người dùng được cấp quyền.
-* Đăng ký người dùng và quản lý cơ sở dữ liệu khuôn mặt.
-* Ghi nhật ký và giám sát lịch sử truy cập.
-* Tích hợp với phần cứng nhúng.
-* Hỗ trợ giám sát từ xa thông qua giao diện web (tùy chọn).
-* Hỗ trợ các mô-đun camera như ESP32-CAM hoặc camera USB.
-* Xác thực và kiểm soát truy cập an toàn.
+- Phát hiện và nhận diện khuôn mặt theo thời gian thực.
+- Tự động mở khóa cho người dùng được cấp quyền.
+- Đăng ký người dùng và quản lý cơ sở dữ liệu khuôn mặt.
+- Ghi lại lịch sử ra vào.
+- Tích hợp phần cứng nhúng.
+- Hỗ trợ bảng điều khiển web để giám sát từ xa.
+- Hỗ trợ camera như ESP32-CAM hoặc camera USB.
+- Xác thực và kiểm soát truy cập an toàn.
 
 ## Kiến trúc hệ thống
 
@@ -35,139 +35,80 @@ Nhận diện khuôn mặt
 
 ```text
 face-recognition-door-lock/
-│
-├── firmware/
-│   ├── esp32/
-│   │   ├── main/
-│   │   ├── include/
-│   │   ├── lib/
-│   │   └── platformio.ini
-│   │
-│   └── arduino/
-│       ├── src/
-│       └── include/
-│
-├── ai-model/
-│   ├── dataset/
-│   │   ├── authorized_users/
-│   │   └── test_images/
-│   │
-│   ├── training/
-│   │   ├── train.py
-│   │   └── preprocess.py
-│   │
-│   ├── inference/
-│   │   ├── face_detector.py
-│   │   ├── recognizer.py
-│   │   └── embeddings.py
-│   │
-│   └── models/
-│       ├── face_recognition_model.onnx
-│       └── labels.json
-│
-├── backend/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── services/
-│   │   ├── routes/
-│   │   ├── middleware/
-│   │   └── app.js
-│   │
-│   ├── database/
-│   │   ├── migrations/
-│   │   └── schema.sql
-│   │
-│   └── package.json
-│
-├── dashboard/
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── hardware/
-│   ├── schematic/
-│   ├── pcb/
-│   ├── wiring/
-│   └── components/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── api.md
-│   ├── setup.md
-│   └── troubleshooting.md
-│
-├── logs/
-│   ├── access_logs/
-│   └── system_logs/
-│
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── hardware/
-│
-├── scripts/
-│   ├── setup.sh
-│   ├── deploy.sh
-│   └── backup.sh
-│
-├── .gitignore
-├── LICENSE
+├── firmware/      # Firmware cho ESP32/Arduino
+├── ai-model/      # Dữ liệu, huấn luyện và suy luận AI
+├── backend/       # REST API, cơ sở dữ liệu và nghiệp vụ
+├── dashboard/     # Giao diện quản trị
+├── web/app/       # Ứng dụng web bổ sung
+├── hardware/      # Sơ đồ mạch, PCB, đấu dây và linh kiện
+├── docs/          # Tài liệu kỹ thuật
+├── logs/          # Log cục bộ hoặc log mẫu
+├── tests/         # Kiểm thử
+├── scripts/       # Script hỗ trợ cài đặt, triển khai, sao lưu
 └── README.md
 ```
 
-## Công nghệ sử dụng
+## Công nghệ dự kiến
 
-### Trí tuệ nhân tạo (AI)
+### Trí tuệ nhân tạo
 
-* OpenCV
-* Face Recognition
-* Mô hình học sâu (Deep Learning)
-* ONNX Runtime
+- OpenCV
+- Face Recognition
+- Mô hình học sâu
+- ONNX Runtime
 
 ### Backend
 
-* Node.js
-* Express.js
-* REST API
+- Node.js
+- Express.js
+- REST API
 
 ### Cơ sở dữ liệu
 
-* MySQL / PostgreSQL
-* SQLite (dành cho môi trường phát triển)
+- MySQL hoặc PostgreSQL
+- SQLite cho môi trường phát triển
 
 ### Hệ thống nhúng
 
-* ESP32-CAM
-* ESP32
-* Servo Motor hoặc khóa điện tử
-* Mô-đun Relay
+- ESP32-CAM
+- ESP32
+- Servo motor hoặc khóa điện
+- Module relay
 
 ### Frontend
 
-* React
-* Vite
+- React
+- Vite
 
-## Quy trình hoạt động
+## Luồng hoạt động
 
-1. Camera thu nhận hình ảnh khuôn mặt.
-2. Hệ thống phát hiện khuôn mặt trong ảnh.
+1. Camera chụp ảnh hoặc truyền khung hình.
+2. Hệ thống phát hiện khuôn mặt.
 3. Trích xuất đặc trưng khuôn mặt.
-4. So sánh với dữ liệu người dùng đã đăng ký.
-5. Xác thực danh tính.
-6. Gửi lệnh mở khóa đến bộ điều khiển cửa.
-7. Ghi nhận lịch sử truy cập.
-8. Gửi thông báo cho quản trị viên (nếu cần).
+4. So khớp với cơ sở dữ liệu người dùng đã đăng ký.
+5. Xác minh danh tính.
+6. Gửi lệnh mở khóa tới bộ điều khiển cửa.
+7. Ghi lại sự kiện truy cập.
+8. Thông báo cho quản trị viên nếu cần.
 
-## Hướng phát triển trong tương lai
+## Hướng dẫn bắt đầu
 
-* Hỗ trợ ứng dụng di động.
-* Xác thực đa lớp (Multi-Factor Authentication).
-* Đồng bộ dữ liệu lên đám mây.
-* Quản lý khách truy cập.
-* Phát hiện giả mạo bằng ảnh hoặc video (Liveness Detection).
-* Thông báo theo thời gian thực.
-* Tích hợp trợ lý giọng nói AI.
+1. Đọc README trong từng thư mục con để biết vai trò và cách cài đặt từng phần.
+2. Chuẩn bị phần cứng: camera, board điều khiển, relay/servo hoặc khóa điện.
+3. Chuẩn bị môi trường backend và AI model.
+4. Chạy thử nhận diện trên ảnh mẫu trước khi kết nối khóa thật.
+5. Kiểm thử kỹ nguồn điện và cơ chế mở khóa trước khi lắp đặt thực tế.
+
+## Hướng phát triển
+
+- Ứng dụng di động.
+- Xác thực nhiều lớp.
+- Đồng bộ dữ liệu lên cloud.
+- Quản lý khách vãng lai.
+- Chống giả mạo bằng ảnh.
+- Thông báo thời gian thực.
+- Tích hợp trợ lý giọng nói.
 
 ## Giấy phép
 
-Dự án được phát hành theo giấy phép MIT License.
+Dự án sử dụng giấy phép MIT.
