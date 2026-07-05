@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+
+# Runtime databases
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

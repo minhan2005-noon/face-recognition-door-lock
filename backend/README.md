@@ -1,23 +1,78 @@
 # Backend
 
-Backend cung cấp REST API cho quản lý người dùng, lịch sử ra vào và lệnh mở khóa.
-
-## Cần làm
-
-- Tạo server Express trong `src/app.js`.
-- Thêm routes, controllers, services và middleware.
-- Kết nối database trong `database/`.
-- Thêm xác thực admin và bảo vệ API mở khóa.
+Backend cung cấp REST API cho hệ thống khóa cửa nhận diện khuôn mặt. API dùng Node.js, Express và SQLite cho môi trường phát triển.
 
 ## Cài đặt
 
-- Cài Node.js LTS.
-- Chạy `npm install` sau khi `package.json` có dependencies.
-- Cấu hình biến môi trường trong file `.env` cục bộ.
+```bash
+cd backend
+npm install
+```
 
-## Chạy dự kiến
+## Chạy server
 
-- Development: `npm run dev`.
-- Production: `npm start`.
-- Test: `npm test`.
+```bash
+npm run dev
+```
 
+Hoặc chạy production:
+
+```bash
+npm start
+```
+
+Mặc định API chạy tại `http://localhost:3000`. Giao diện web nằm trong `../web/app` và chạy riêng bằng Vite.
+
+## Database
+
+SQLite database sẽ được tự tạo tại:
+
+```text
+backend/database/door-lock.sqlite
+```
+
+Schema nằm trong:
+
+```text
+backend/database/schema.sql
+```
+
+Bạn có thể đổi đường dẫn database bằng biến môi trường:
+
+```bash
+DATABASE_PATH=/absolute/path/door-lock.sqlite npm start
+```
+
+## Endpoint chính
+
+- `GET /api/health`
+- `GET /api/users`
+- `POST /api/users`
+- `PATCH /api/users/:id`
+- `DELETE /api/users/:id`
+- `POST /api/users/:id/face-data`
+- `GET /api/devices`
+- `POST /api/devices`
+- `PATCH /api/devices/:id/status`
+- `GET /api/access-logs`
+- `POST /api/recognition-events`
+- `POST /api/lock/unlock`
+- `POST /api/lock/lock`
+
+## Ví dụ nhanh
+
+Tạo user:
+
+```bash
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Nguyen Van A","role":"resident"}'
+```
+
+Gửi kết quả nhận diện:
+
+```bash
+curl -X POST http://localhost:3000/api/recognition-events \
+  -H "Content-Type: application/json" \
+  -d '{"deviceId":"door_lock_001","recognized":true,"userId":"USER_ID","confidence":0.92}'
+```
