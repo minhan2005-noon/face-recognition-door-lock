@@ -1,22 +1,40 @@
 # Web App
 
-Ứng dụng web/app cho người dùng hoặc màn hình vận hành.
-
-## Cần làm
-
-- Xác định mục đích app: user portal, kiosk, mobile-web hay monitor.
-- Tạo frontend bằng React/Vite nếu đi theo công nghệ trong README gốc.
-- Gọi backend để xem trạng thái và lịch sử cần thiết.
+Ứng dụng web quản trị cho hệ thống khóa cửa nhận diện khuôn mặt. App chạy bằng Vite và gọi backend API tại `http://localhost:3000/api`.
 
 ## Cài đặt
 
-- Cài Node.js LTS.
-- Chạy `npm install` sau khi thêm dependencies.
-- Chạy development server bằng `npm run dev` khi có script.
+```bash
+cd web/app
+npm install
+```
 
-## Cấu trúc gợi ý
+## Chạy development
 
-- `src/`: mã nguồn ứng dụng.
-- `public/`: static assets.
-- `package.json`: dependencies và scripts.
+Mở terminal 1 để chạy backend:
 
+```bash
+cd backend
+npm run dev
+```
+
+Mở terminal 2 để chạy web:
+
+```bash
+cd web/app
+npm run dev
+```
+
+Sau đó mở:
+
+```text
+http://localhost:5173
+```
+
+## Đổi URL backend
+
+Nếu backend không chạy ở port `3000`, tạo file `.env` trong `web/app`:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
