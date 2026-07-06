@@ -3,7 +3,14 @@ const { get, run } = require('../database');
 const asyncHandler = require('../utils/asyncHandler');
 const httpError = require('../utils/httpError');
 const { createId } = require('../utils/ids');
-const { formatRecognitionEvent } = require('../utils/rowFormatters');
+const {
+  formatLockCommand,
+  formatRecognitionEvent
+} = require('../utils/rowFormatters');
+const {
+  publishLockCommand,
+  publishRecognitionDecision
+} = require('../services/mqttService');
 
 const router = express.Router();
 
@@ -67,12 +74,15 @@ router.post(
       ]
     );
 
+    let command = null;
+
     if (isAllowedUser) {
+      const commandId = createId('cmd');
       await run(
         `INSERT INTO lock_commands (id, device_id, user_id, action, reason, status)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
-          createId('cmd'),
+          commandId,
           deviceId,
           user.id,
           'unlock',
@@ -80,17 +90,31 @@ router.post(
           'queued'
         ]
       );
+
+      command = await get('SELECT * FROM lock_commands WHERE id = ?', [
+        commandId
+      ]);
     }
 
     const event = await get('SELECT * FROM recognition_events WHERE id = ?', [
       eventId
     ]);
+    const formattedEvent = formatRecognitionEvent(event);
+    const formattedCommand = formatLockCommand(command);
+
+    publishRecognitionDecision(formattedEvent);
+    if (formattedCommand) {
+      publishLockCommand(formattedCommand);
+    }
 
     res.status(201).json({
       success: true,
       decision,
       message: isAllowedUser ? 'Người dùng hợp lệ.' : 'Từ chối truy cập.',
-      data: formatRecognitionEvent(event)
+      data: {
+        event: formattedEvent,
+        command: formattedCommand
+      }
     });
   })
 );

@@ -1,5 +1,6 @@
 const express = require('express');
 const { databasePath } = require('../database');
+const { getMqttStatus } = require('../services/mqttService');
 
 const router = express.Router();
 
@@ -8,7 +9,8 @@ router.get('/', (req, res) => {
     success: true,
     status: 'ok',
     service: 'backend-api',
-    database: databasePath
+    database: databasePath,
+    mqtt: getMqttStatus()
   });
 });
 

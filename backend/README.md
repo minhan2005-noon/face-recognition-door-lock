@@ -43,6 +43,46 @@ Bạn có thể đổi đường dẫn database bằng biến môi trường:
 DATABASE_PATH=/absolute/path/door-lock.sqlite npm start
 ```
 
+## MQTT
+
+Backend hỗ trợ MQTT để gửi lệnh khóa/mở khóa tới thiết bị và nhận trạng thái từ ESP32/camera. Nếu không cấu hình `MQTT_URL`, MQTT sẽ tắt và REST API vẫn chạy bình thường.
+
+Ví dụ chạy với broker local:
+
+```bash
+MQTT_URL=mqtt://localhost:1883 npm run dev
+```
+
+Topic mặc định:
+
+```text
+doorlock/device/{deviceId}/command
+doorlock/device/{deviceId}/decision
+doorlock/device/{deviceId}/status
+```
+
+Backend publish command:
+
+```json
+{
+  "commandId": "cmd_xxx",
+  "action": "unlock",
+  "reason": "recognized_user",
+  "userId": "user_xxx",
+  "createdAt": "2026-07-06T00:00:00.000Z"
+}
+```
+
+Thiết bị publish status:
+
+```json
+{
+  "status": "online",
+  "batteryLevel": 86,
+  "lastSeenAt": "2026-07-06T00:00:00.000Z"
+}
+```
+
 ## Endpoint chính
 
 - `GET /api/health`

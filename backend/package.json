@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "morgan": "^1.10.0",
+    "mqtt": "^5.15.2",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const httpError = require('../utils/httpError');
 const { createId } = require('../utils/ids');
 const { formatAccessLog, formatLockCommand } = require('../utils/rowFormatters');
+const { publishLockCommand } = require('../services/mqttService');
 
 const router = express.Router();
 
@@ -16,6 +17,8 @@ router.post(
       reason: req.body.reason || 'manual',
       userId: req.body.userId || null
     });
+
+    publishLockCommand(result.command);
 
     res.status(201).json({
       success: true,
@@ -34,6 +37,8 @@ router.post(
       reason: req.body.reason || 'manual',
       userId: req.body.userId || null
     });
+
+    publishLockCommand(result.command);
 
     res.status(201).json({
       success: true,
