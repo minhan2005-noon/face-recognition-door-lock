@@ -1,6 +1,7 @@
 const express = require('express');
 const { databasePath } = require('../database');
 const { getMqttStatus } = require('../services/mqttService');
+const { getWebSocketStatus } = require('../services/webSocketService');
 
 const router = express.Router();
 
@@ -10,7 +11,8 @@ router.get('/', (req, res) => {
     status: 'ok',
     service: 'backend-api',
     database: databasePath,
-    mqtt: getMqttStatus()
+    mqtt: getMqttStatus(),
+    websocket: getWebSocketStatus()
   });
 });
 

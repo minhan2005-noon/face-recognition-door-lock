@@ -11,6 +11,7 @@ const {
   publishLockCommand,
   publishRecognitionDecision
 } = require('../services/mqttService');
+const { broadcast } = require('../services/webSocketService');
 
 const router = express.Router();
 
@@ -106,6 +107,11 @@ router.post(
     if (formattedCommand) {
       publishLockCommand(formattedCommand);
     }
+
+    broadcast('recognition.event', {
+      event: formattedEvent,
+      command: formattedCommand
+    });
 
     res.status(201).json({
       success: true,

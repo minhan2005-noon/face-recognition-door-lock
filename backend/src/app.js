@@ -8,6 +8,7 @@ const healthRoutes = require('./routes/health');
 const lockRoutes = require('./routes/lock');
 const recognitionEventsRoutes = require('./routes/recognitionEvents');
 const usersRoutes = require('./routes/users');
+const apiKeyAuth = require('./middleware/apiKeyAuth');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 
@@ -18,6 +19,7 @@ app.use(express.json({ limit: '2mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.use('/api/health', healthRoutes);
+app.use('/api', apiKeyAuth);
 app.use('/api/users', usersRoutes);
 app.use('/api/devices', devicesRoutes);
 app.use('/api/access-logs', accessLogsRoutes);

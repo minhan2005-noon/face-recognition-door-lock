@@ -1,4 +1,5 @@
 const { run } = require('../database');
+const { broadcast } = require('./webSocketService');
 
 let mqtt;
 let client = null;
@@ -30,11 +31,21 @@ function connectMqtt() {
   }
 
   mqtt = require('mqtt');
-  client = mqtt.connect(mqttUrl, {
+  const options = {
     clientId: process.env.MQTT_CLIENT_ID || `door-lock-api-${process.pid}`,
     clean: true,
     reconnectPeriod: Number(process.env.MQTT_RECONNECT_MS || 5000)
-  });
+  };
+
+  if (process.env.MQTT_USERNAME) {
+    options.username = process.env.MQTT_USERNAME;
+  }
+
+  if (process.env.MQTT_PASSWORD) {
+    options.password = process.env.MQTT_PASSWORD;
+  }
+
+  client = mqtt.connect(mqttUrl, options);
 
   client.on('connect', () => {
     connected = true;
@@ -86,6 +97,13 @@ async function handleDeviceMessage(topic, payload) {
      WHERE id = ?`,
     [status, batteryLevel, lastSeenAt, deviceId]
   );
+
+  broadcast('device.status', {
+    deviceId,
+    status,
+    batteryLevel,
+    lastSeenAt
+  });
 }
 
 function parseJsonPayload(payload) {

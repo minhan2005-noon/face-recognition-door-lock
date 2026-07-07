@@ -1,12 +1,81 @@
 const express = require('express');
-const { get, run } = require('../database');
+const { all, get, run } = require('../database');
 const asyncHandler = require('../utils/asyncHandler');
 const httpError = require('../utils/httpError');
 const { createId } = require('../utils/ids');
 const { formatAccessLog, formatLockCommand } = require('../utils/rowFormatters');
 const { publishLockCommand } = require('../services/mqttService');
+const { broadcast } = require('../services/webSocketService');
 
 const router = express.Router();
+
+router.get(
+  '/commands',
+  asyncHandler(async (req, res) => {
+    const filters = [];
+    const params = [];
+
+    if (req.query.deviceId) {
+      filters.push('device_id = ?');
+      params.push(req.query.deviceId);
+    }
+
+    if (req.query.status) {
+      filters.push('status = ?');
+      params.push(req.query.status);
+    }
+
+    const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+    const commands = await all(
+      `SELECT * FROM lock_commands
+       ${whereClause}
+       ORDER BY created_at DESC
+       LIMIT 100`,
+      params
+    );
+
+    res.json({
+      success: true,
+      data: commands.map(formatLockCommand)
+    });
+  })
+);
+
+router.patch(
+  '/commands/:id/status',
+  asyncHandler(async (req, res) => {
+    const { status } = req.body;
+
+    if (!status) {
+      throw httpError(400, 'status là bắt buộc.', 'INVALID_COMMAND_STATUS');
+    }
+
+    const result = await run(
+      `UPDATE lock_commands
+       SET status = ?
+       WHERE id = ?`,
+      [status, req.params.id]
+    );
+
+    if (result.changes === 0) {
+      throw httpError(404, 'Không tìm thấy lệnh khóa.', 'COMMAND_NOT_FOUND');
+    }
+
+    const command = await get('SELECT * FROM lock_commands WHERE id = ?', [
+      req.params.id
+    ]);
+    const formattedCommand = formatLockCommand(command);
+
+    broadcast('lock.command.status', {
+      command: formattedCommand
+    });
+
+    res.json({
+      success: true,
+      data: formattedCommand
+    });
+  })
+);
 
 router.post(
   '/unlock',
@@ -19,6 +88,7 @@ router.post(
     });
 
     publishLockCommand(result.command);
+    broadcast('lock.command', result);
 
     res.status(201).json({
       success: true,
@@ -39,6 +109,7 @@ router.post(
     });
 
     publishLockCommand(result.command);
+    broadcast('lock.command', result);
 
     res.status(201).json({
       success: true,
