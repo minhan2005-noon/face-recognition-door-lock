@@ -31,6 +31,27 @@ Sau đó mở:
 http://localhost:5173
 ```
 
+## Chạy bằng Docker
+
+Build image web:
+
+```bash
+cd web/app
+docker build -t face-door-lock-web .
+```
+
+Chạy container:
+
+```bash
+docker run --rm -p 8080:80 face-door-lock-web
+```
+
+Sau đó mở:
+
+```text
+http://localhost:8080
+```
+
 ## Đổi URL backend
 
 Nếu backend không chạy ở port `3000`, tạo file `.env` trong `web/app`:
