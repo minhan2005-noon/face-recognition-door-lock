@@ -14,6 +14,9 @@ Nhánh `feature/backend-api` dùng để phát triển phần backend và REST A
 - Ghi nhận lịch sử truy cập.
 - Xử lý lệnh khóa/mở khóa.
 - Kết nối và quản lý cơ sở dữ liệu.
+- Kết nối MQTT broker để gửi lệnh realtime tới thiết bị.
+- Mở WebSocket gateway để web/dashboard nhận cập nhật realtime.
+- Bảo vệ API bằng API key trong môi trường dev/demo.
 - Thiết kế middleware xác thực, phân quyền, logging và xử lý lỗi.
 - Viết tài liệu API để các nhóm frontend, AI và firmware có thể tích hợp.
 
@@ -70,10 +73,24 @@ Các nhóm endpoint có thể triển khai:
 - `POST /api/users`: tạo người dùng mới.
 - `GET /api/access-logs`: lấy lịch sử ra vào.
 - `POST /api/recognition-events`: nhận kết quả nhận diện từ AI service.
+- `GET /api/lock/commands`: lấy danh sách lệnh khóa/mở khóa để firmware polling khi cần.
+- `PATCH /api/lock/commands/:id/status`: cập nhật trạng thái xử lý lệnh.
 - `POST /api/lock/unlock`: gửi lệnh mở khóa.
 - `POST /api/lock/lock`: gửi lệnh khóa lại.
+- `ws://localhost:3000/ws`: WebSocket realtime cho dashboard/tool giám sát.
 
 Chi tiết endpoint nên được cập nhật trong `docs/api.md`.
+
+## Biến môi trường quan trọng
+
+Tham khảo `backend/.env.example`.
+
+- `PORT`: port backend API.
+- `DATABASE_PATH`: đường dẫn SQLite database.
+- `API_KEY`: khóa bảo vệ các endpoint riêng tư.
+- `MQTT_URL`: URL MQTT broker.
+- `MQTT_USERNAME` và `MQTT_PASSWORD`: thông tin đăng nhập MQTT nếu broker bật xác thực.
+- `WS_PATH`: đường dẫn WebSocket.
 
 ## Quy trình làm việc
 
@@ -142,4 +159,3 @@ Không merge Pull Request nếu còn lỗi chạy server, lỗi database hoặc 
 - Nhóm AI cần thống nhất payload gửi kết quả nhận diện.
 - Nhóm firmware cần thống nhất cách backend gửi lệnh khóa/mở khóa.
 - Mọi thay đổi ảnh hưởng đến nhóm khác cần được ghi trong Pull Request.
-
