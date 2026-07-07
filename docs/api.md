@@ -10,8 +10,10 @@ Tài liệu này mô tả các REST API dự kiến cho hệ thống khóa cửa
 
 ```http
 Content-Type: application/json
-Authorization: Bearer <access_token>
+X-API-Key: <api_key>
 ```
+
+`GET /api/health` là endpoint public. Các endpoint còn lại dưới `/api` cần API key khi backend chạy với biến môi trường `API_KEY`.
 
 ## Mã trạng thái
 
@@ -46,7 +48,18 @@ Response:
 {
   "success": true,
   "status": "ok",
-  "service": "backend-api"
+  "service": "backend-api",
+  "mqtt": {
+    "enabled": true,
+    "connected": true,
+    "brokerUrl": "mqtt://localhost:1883"
+  },
+  "websocket": {
+    "enabled": true,
+    "path": "/ws",
+    "clients": 0,
+    "protected": true
+  }
 }
 ```
 
@@ -159,7 +172,23 @@ Response:
 {
   "success": true,
   "decision": "unlock",
-  "message": "Người dùng hợp lệ"
+  "message": "Người dùng hợp lệ",
+  "data": {
+    "event": {
+      "id": "event_001",
+      "deviceId": "door_lock_001",
+      "userId": "user_001",
+      "recognized": true,
+      "confidence": 0.92,
+      "decision": "unlock"
+    },
+    "command": {
+      "id": "cmd_001",
+      "deviceId": "door_lock_001",
+      "action": "unlock",
+      "status": "queued"
+    }
+  }
 }
 ```
 
@@ -189,6 +218,27 @@ Request:
 {
   "deviceId": "door_lock_001",
   "reason": "manual"
+}
+```
+
+### `GET /api/lock/commands`
+
+Lấy danh sách lệnh khóa/mở khóa. Firmware có thể dùng endpoint này để polling lệnh nếu MQTT chưa sẵn sàng.
+
+Query params:
+
+- `deviceId`: lọc theo thiết bị.
+- `status`: lọc theo trạng thái, ví dụ `queued`, `sent`, `completed`, `failed`.
+
+### `PATCH /api/lock/commands/:id/status`
+
+Firmware cập nhật trạng thái sau khi xử lý lệnh.
+
+Request:
+
+```json
+{
+  "status": "completed"
 }
 ```
 
@@ -245,8 +295,52 @@ Request:
 
 ## Bảo mật API
 
-- Endpoint quản trị cần token hợp lệ.
-- Endpoint nhận dữ liệu từ AI/firmware nên dùng API key riêng cho thiết bị.
+- Endpoint riêng tư dùng API key qua `X-API-Key` hoặc `Authorization: Bearer <api_key>`.
+- Endpoint nhận dữ liệu từ AI/firmware nên dùng API key riêng cho thiết bị khi có thiết bị thật.
 - Không trả về embedding khuôn mặt nếu frontend không thật sự cần.
 - Không log token, mật khẩu hoặc dữ liệu khuôn mặt thô.
 
+## MQTT
+
+Backend có thể kết nối MQTT broker bằng biến môi trường:
+
+```bash
+MQTT_URL=mqtt://localhost:1883 npm run dev
+```
+
+Nếu broker có username/password:
+
+```bash
+MQTT_URL=mqtt://localhost:1883 \
+MQTT_USERNAME=doorlock_backend \
+MQTT_PASSWORD=strong_password \
+npm run dev
+```
+
+Topic mặc định:
+
+- `doorlock/device/{deviceId}/command`
+- `doorlock/device/{deviceId}/decision`
+- `doorlock/device/{deviceId}/status`
+
+## WebSocket
+
+Endpoint realtime:
+
+```text
+ws://localhost:3000/ws
+```
+
+Nếu bật `API_KEY`, kết nối bằng:
+
+```text
+ws://localhost:3000/ws?apiKey=<api_key>
+```
+
+Event realtime:
+
+- `connection`: client kết nối thành công.
+- `recognition.event`: có sự kiện nhận diện mới.
+- `lock.command`: có lệnh khóa/mở khóa mới.
+- `lock.command.status`: trạng thái lệnh khóa/mở khóa thay đổi.
+- `device.status`: thiết bị gửi trạng thái qua MQTT.
