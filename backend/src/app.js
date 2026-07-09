@@ -1,3 +1,5 @@
+require('dotenv').config();
+console.log('MQTT_URL =', process.env.MQTT_URL);
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');

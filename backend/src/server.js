@@ -1,3 +1,5 @@
+require('dotenv').config();
+console.log('MQTT_URL =', process.env.MQTT_URL);
 const http = require('http');
 const app = require('./app');
 const { initDatabase } = require('./database');
