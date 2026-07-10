@@ -96,10 +96,10 @@ Kiểm tra:
 
 Kiểm tra:
 
-- `DATABASE_URL` đúng chưa.
-- Database server có đang chạy không.
-- User/password database đúng chưa.
-- Migration/schema đã được chạy chưa.
+- `DATABASE_PATH` đúng chưa.
+- Thư mục chứa file SQLite có quyền ghi không.
+- File `backend/database/schema.sql` có tồn tại không.
+- Backend có log lỗi khi khởi động không.
 
 ## AI model không nhận diện đúng
 
@@ -139,4 +139,3 @@ Kiểm tra:
 - CORS đã được cấu hình chưa.
 - Token/API key có hợp lệ không.
 - Biến môi trường frontend trỏ đúng backend chưa.
-

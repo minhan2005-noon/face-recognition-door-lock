@@ -40,7 +40,7 @@ cd backend
 npm install
 ```
 
-Sau khi có script trong `package.json`, có thể chạy:
+Chạy backend ở chế độ development:
 
 ```bash
 npm run dev
@@ -50,12 +50,28 @@ Biến môi trường dự kiến:
 
 ```env
 PORT=3000
-DATABASE_URL=sqlite://./database/dev.sqlite
-JWT_SECRET=change_me
-DEVICE_API_KEY=change_me
+DATABASE_PATH=./database/door-lock.sqlite
+API_KEY=change_me
+MQTT_URL=mqtt://localhost:1883
+MQTT_CLIENT_ID=door-lock-api
+MQTT_COMMAND_TOPIC_PREFIX=doorlock/device
+MQTT_STATUS_TOPIC=doorlock/device/+/status
+MQTT_USERNAME=doorlock_backend
+MQTT_PASSWORD=strong_password
+MQTT_RECONNECT_MS=5000
+WS_PATH=/ws
+WS_HEARTBEAT_MS=30000
 ```
 
 Không commit file `.env` thật lên Git.
+
+Tham khảo file mẫu:
+
+```bash
+cp .env.example .env
+```
+
+Nếu chỉ muốn chạy REST API, có thể bỏ trống `MQTT_URL`; lúc đó MQTT sẽ tắt nhưng API, database và WebSocket vẫn chạy.
 
 ## Cài đặt AI model
 
@@ -69,14 +85,6 @@ pip install -r requirements.txt
 Nếu chưa có `requirements.txt`, nhóm AI cần tạo khi bắt đầu triển khai.
 
 ## Cài đặt dashboard/web
-
-```bash
-cd dashboard
-npm install
-npm run dev
-```
-
-Hoặc với `web/app`:
 
 ```bash
 cd web/app
@@ -135,4 +143,3 @@ git push origin <ten-nhanh>
 - Không xóa thư mục của nhóm khác trên nhánh feature.
 - Nếu sửa file chung, cần báo trong Pull Request.
 - Dữ liệu khuôn mặt thật không nên commit lên repository.
-
