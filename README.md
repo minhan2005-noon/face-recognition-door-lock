@@ -99,6 +99,111 @@ face-recognition-door-lock/
 4. Chạy thử nhận diện trên ảnh mẫu trước khi kết nối khóa thật.
 5. Kiểm thử kỹ nguồn điện và cơ chế mở khóa trước khi lắp đặt thực tế.
 
+## Chạy Bằng Docker
+
+Docker giúp chạy từng phần của hệ thống trong container, giảm lỗi do khác môi trường giữa các máy.
+
+### 1. Cài Docker
+
+Cài Docker Desktop cho macOS:
+
+```text
+https://www.docker.com/products/docker-desktop/
+```
+
+Sau khi cài xong, mở Docker Desktop và kiểm tra:
+
+```bash
+docker --version
+docker compose version
+```
+
+### 2. Build Backend Image
+
+```bash
+cd /Users/hoangminhan/face-recognition-door-lock/backend
+docker build -t face-door-lock-backend .
+```
+
+### 3. Chạy Backend Container
+
+Không bật API key:
+
+```bash
+docker run --rm -p 3000:3000 face-door-lock-backend
+```
+
+Bật API key:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e API_KEY=minhan123 \
+  face-door-lock-backend
+```
+
+Bật API key và kết nối MQTT broker đang chạy trên máy host:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e API_KEY=minhan123 \
+  -e MQTT_URL=mqtt://host.docker.internal:1883 \
+  face-door-lock-backend
+```
+
+Kiểm tra backend:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+Nếu bật `API_KEY`, gọi API riêng tư bằng:
+
+```bash
+curl http://localhost:3000/api/users \
+  -H "X-API-Key: minhan123"
+```
+
+### 4. Build Web Image
+
+```bash
+cd /Users/hoangminhan/face-recognition-door-lock/web/app
+docker build -t face-door-lock-web .
+```
+
+### 5. Chạy Web Container
+
+```bash
+docker run --rm -p 8080:80 face-door-lock-web
+```
+
+Mở trình duyệt:
+
+```text
+http://localhost:8080
+```
+
+### 6. Lệnh Docker Hữu Ích
+
+Xem container đang chạy:
+
+```bash
+docker ps
+```
+
+Dừng container:
+
+```bash
+docker stop <container_id>
+```
+
+Xem log container:
+
+```bash
+docker logs <container_id>
+```
+
+Lưu ý: hiện project đã có Dockerfile cho `backend` và `web/app`, nhưng chưa có `docker-compose.yml`. Docker Compose có thể được thêm sau để chạy backend, web, MQTT broker và database bằng một lệnh.
+
 ## Hướng phát triển
 
 - Ứng dụng di động.

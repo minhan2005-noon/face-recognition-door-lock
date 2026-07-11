@@ -2,6 +2,27 @@
 
 Ứng dụng web/app cho người dùng hoặc màn hình vận hành.
 
+## Chạy bằng Docker
+
+Build image web:
+
+```bash
+cd web/app
+docker build -t face-door-lock-web .
+```
+
+Chạy container:
+
+```bash
+docker run --rm -p 8080:80 face-door-lock-web
+```
+
+Sau đó mở:
+
+```text
+http://localhost:8080
+```
+
 ## Cần làm
 
 - Xác định mục đích app: user portal, kiosk, mobile-web hay monitor.
@@ -19,4 +40,3 @@
 - `src/`: mã nguồn ứng dụng.
 - `public/`: static assets.
 - `package.json`: dependencies và scripts.
-
