@@ -334,11 +334,11 @@ elements.authForm.addEventListener('submit', handleAuthSubmit);
 elements.toggleAuthModeBtn.addEventListener('click', toggleAuthMode);
 elements.logoutBtn.addEventListener('click', logout);
 elements.saveConfigBtn.addEventListener('click', saveConfig);
-elements.refreshAllBtn.addEventListener('click', refreshAll);
-document.querySelector('#refreshDevicesBtn').addEventListener('click', loadDevices);
-document.querySelector('#refreshLogsBtn').addEventListener('click', loadLogsAndCommands);
-document.querySelector('#clearLogsBtn').addEventListener('click', clearAccessHistory);
-document.querySelector('#refreshUsersBtn').addEventListener('click', loadUsers);
+elements.refreshAllBtn.addEventListener('click', runUiAction(refreshAll));
+document.querySelector('#refreshDevicesBtn').addEventListener('click', runUiAction(loadDevices));
+document.querySelector('#refreshLogsBtn').addEventListener('click', runUiAction(loadLogsAndCommands));
+document.querySelector('#clearLogsBtn').addEventListener('click', runUiAction(clearAccessHistory));
+document.querySelector('#refreshUsersBtn').addEventListener('click', runUiAction(loadUsers));
 document.querySelector('#connectWsBtn').addEventListener('click', connectWebSocket);
 document.querySelector('#createUserForm').addEventListener('submit', createUser);
 document.querySelector('#recognitionForm').addEventListener('submit', scanAndUnlock);
@@ -351,6 +351,16 @@ elements.deviceControlList.addEventListener('click', handleDeviceAction);
 elements.usersList.addEventListener('click', handleUserAction);
 
 bootAuth();
+
+function runUiAction(action) {
+  return (...args) => {
+    Promise.resolve(action(...args)).catch((error) => {
+      showToast(error.message);
+      addLocalEvent('error', error.message);
+      renderRuntimeStatus();
+    });
+  };
+}
 
 async function bootAuth() {
   renderAuthState();
@@ -568,6 +578,11 @@ async function requestApi(endpoint, options = {}) {
   };
   renderLastRequest();
 
+  const guardError = guardPrivateApiRequest(endpoint);
+  if (guardError) {
+    throw guardError;
+  }
+
   const headers = {
     'Content-Type': 'application/json'
   };
@@ -641,8 +656,44 @@ function handleSecurityError(error) {
   }
 
   if (error.errorCode === 'API_KEY_SPAM_LOGOUT') {
-    forceLocalLogout('Bạn đã bị đăng xuất vì thao tác mã truy cập khi đang bị chặn.');
+    startApiKeyBlock(error.remainingMs || 5 * 60 * 1000);
+    clearSavedApiKey();
+    showToast('Mã truy cập đang bị chặn. Chờ hết thời gian rồi nhập lại mã.');
   }
+}
+
+function guardPrivateApiRequest(endpoint) {
+  if (!requiresApiKey(endpoint)) {
+    return null;
+  }
+
+  if (!state.sessionToken || !state.account) {
+    return createClientError('Bạn cần đăng nhập để tiếp tục.', 'LOGIN_REQUIRED');
+  }
+
+  if (isApiKeyBlocked()) {
+    renderApiKeyGuard();
+    return createClientError(
+      'Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi thao tác tiếp.',
+      'API_KEY_BLOCKED_CLIENT'
+    );
+  }
+
+  if (!state.apiKey) {
+    return createClientError('Nhập mã truy cập rồi bấm Lưu cấu hình.', 'API_KEY_REQUIRED');
+  }
+
+  return null;
+}
+
+function requiresApiKey(endpoint) {
+  return !endpoint.path.startsWith('/auth') && endpoint.path !== '/health';
+}
+
+function createClientError(message, errorCode) {
+  const error = new Error(message);
+  error.errorCode = errorCode;
+  return error;
 }
 
 function clearSavedApiKey() {
@@ -1262,6 +1313,12 @@ function compareFaceSignatures(reference = [], current = []) {
 }
 
 function connectWebSocket() {
+  const guardError = guardPrivateApiRequest(ENDPOINTS.devices);
+  if (guardError) {
+    showToast(guardError.message);
+    return;
+  }
+
   if (!state.health?.websocket?.enabled) {
     state.socketState = 'disabled';
     renderRuntimeStatus();
