@@ -638,11 +638,24 @@ async function scanAndUnlock(event) {
     return;
   }
 
+  if (!Array.isArray(storedProfile.signature) || storedProfile.signature.length !== 1024) {
+    setScanStatus('Cần lưu lại mặt admin', 'error');
+    showToast('Bấm Lưu mặt admin lại để dùng kiểm tra camera trống.');
+    return;
+  }
+
   setScanStatus('Đang so khớp khuôn mặt...', 'warn');
 
   try {
-    const currentSignature = captureFaceSignature();
-    const match = compareFaceSignatures(storedProfile.signature, currentSignature);
+    const currentCapture = captureFaceSignature();
+    const frameCheck = validateFaceFrame(currentCapture.quality);
+
+    if (!frameCheck.valid) {
+      await sendDeniedRecognition(deviceId, userId, frameCheck.reason);
+      return;
+    }
+
+    const match = compareFaceSignatures(storedProfile.signature, currentCapture.signature);
 
     if (!match.allowed) {
       await sendDeniedRecognition(deviceId, userId, `Mặt không khớp (${Math.round(match.score * 100)}%)`);
@@ -703,11 +716,20 @@ async function enrollSelectedAdminFace() {
     return;
   }
 
-  const signature = captureFaceSignature();
+  const capture = captureFaceSignature();
+  const frameCheck = validateFaceFrame(capture.quality);
+
+  if (!frameCheck.valid) {
+    setScanStatus(frameCheck.reason, 'error');
+    showToast('Không lưu mặt: ' + frameCheck.reason);
+    return;
+  }
+
   state.faceProfiles[userId] = {
     userId,
     name: selectedUser.name,
-    signature,
+    signature: capture.signature,
+    quality: capture.quality,
     createdAt: new Date().toISOString()
   };
   persistFaceProfiles();
@@ -742,19 +764,90 @@ async function sendDeniedRecognition(deviceId, userId, reason) {
 function captureFaceSignature() {
   const video = elements.cameraPreview;
   const canvas = document.createElement('canvas');
-  const size = 16;
+  const size = 32;
   canvas.width = size;
   canvas.height = size;
   const context = canvas.getContext('2d', { willReadFrequently: true });
   context.drawImage(video, 0, 0, size, size);
   const { data } = context.getImageData(0, 0, size, size);
   const signature = [];
+  const lumaValues = [];
+  let skinPixels = 0;
+  let centerLuma = 0;
+  let outerLuma = 0;
+  let centerCount = 0;
+  let outerCount = 0;
 
-  for (let index = 0; index < data.length; index += 4) {
-    signature.push(Number(((data[index] + data[index + 1] + data[index + 2]) / 765).toFixed(4)));
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const index = (y * size + x) * 4;
+      const red = data[index];
+      const green = data[index + 1];
+      const blue = data[index + 2];
+      const luma = (red * 0.299 + green * 0.587 + blue * 0.114) / 255;
+      const normalized = Number(luma.toFixed(4));
+      const isCenter = x >= 9 && x <= 22 && y >= 6 && y <= 25;
+      const maxChannel = Math.max(red, green, blue);
+      const minChannel = Math.min(red, green, blue);
+      const looksLikeSkin = red > 70 && green > 45 && blue > 30 && red > blue && maxChannel - minChannel > 15;
+
+      signature.push(normalized);
+      lumaValues.push(luma);
+
+      if (looksLikeSkin) {
+        skinPixels += 1;
+      }
+
+      if (isCenter) {
+        centerLuma += luma;
+        centerCount += 1;
+      } else {
+        outerLuma += luma;
+        outerCount += 1;
+      }
+    }
   }
 
-  return signature;
+  const mean = lumaValues.reduce((total, value) => total + value, 0) / lumaValues.length;
+  const variance = lumaValues.reduce((total, value) => total + (value - mean) ** 2, 0) / lumaValues.length;
+  const centerAverage = centerCount ? centerLuma / centerCount : 0;
+  const outerAverage = outerCount ? outerLuma / outerCount : 0;
+  const centerContrast = Math.abs(centerAverage - outerAverage);
+  const skinRatio = skinPixels / lumaValues.length;
+
+  return {
+    signature,
+    quality: {
+      mean,
+      variance,
+      centerContrast,
+      skinRatio
+    }
+  };
+}
+
+function validateFaceFrame(quality) {
+  if (!quality) {
+    return { valid: false, reason: 'Camera chưa có hình ảnh rõ' };
+  }
+
+  if (quality.mean < 0.08) {
+    return { valid: false, reason: 'Khung hình quá tối' };
+  }
+
+  if (quality.mean > 0.94) {
+    return { valid: false, reason: 'Khung hình quá sáng hoặc trống' };
+  }
+
+  if (quality.variance < 0.006) {
+    return { valid: false, reason: 'Camera đang trống hoặc thiếu chi tiết khuôn mặt' };
+  }
+
+  if (quality.centerContrast < 0.018 && quality.skinRatio < 0.06) {
+    return { valid: false, reason: 'Không thấy khuôn mặt rõ trong camera' };
+  }
+
+  return { valid: true, reason: 'Khung hình hợp lệ' };
 }
 
 function compareFaceSignatures(reference = [], current = []) {
