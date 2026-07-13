@@ -1,5 +1,5 @@
 const express = require('express');
-const { all } = require('../database');
+const { all, run } = require('../database');
 const asyncHandler = require('../utils/asyncHandler');
 const { formatAccessLog } = require('../utils/rowFormatters');
 
@@ -41,6 +41,21 @@ router.get(
     );
 
     res.json({ success: true, data: logs.map(formatAccessLog) });
+  })
+);
+
+router.delete(
+  '/',
+  asyncHandler(async (req, res) => {
+    const result = await run('DELETE FROM access_logs');
+
+    res.json({
+      success: true,
+      message: 'Đã xóa lịch sử ra vào.',
+      data: {
+        deleted: result.changes
+      }
+    });
   })
 );
 

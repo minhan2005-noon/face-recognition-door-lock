@@ -10,18 +10,19 @@ const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY || 'minhan123';
 
 const ENDPOINTS = {
-  health: { method: 'GET', path: '/health', label: 'Backend status' },
-  devices: { method: 'GET', path: '/devices', label: 'Device status' },
-  updateDevice: { method: 'PATCH', path: '/devices/:id/status', label: 'Update device status' },
-  users: { method: 'GET', path: '/users', label: 'Users' },
-  createUser: { method: 'POST', path: '/users', label: 'Create user' },
-  updateUser: { method: 'PATCH', path: '/users/:id', label: 'Update user' },
-  disableUser: { method: 'DELETE', path: '/users/:id', label: 'Disable user' },
-  logs: { method: 'GET', path: '/access-logs', label: 'Latest/history' },
-  commands: { method: 'GET', path: '/lock/commands', label: 'Command history' },
-  lock: { method: 'POST', path: '/lock/lock', label: 'Send lock command' },
-  unlock: { method: 'POST', path: '/lock/unlock', label: 'Send unlock command' },
-  recognition: { method: 'POST', path: '/recognition-events', label: 'Send recognition event' }
+  health: { method: 'GET', path: '/health', label: 'Kiểm tra hệ thống' },
+  devices: { method: 'GET', path: '/devices', label: 'Tải trạng thái cửa' },
+  updateDevice: { method: 'PATCH', path: '/devices/:id/status', label: 'Cập nhật trạng thái cửa' },
+  users: { method: 'GET', path: '/users', label: 'Tải danh sách người dùng' },
+  createUser: { method: 'POST', path: '/users', label: 'Thêm người dùng' },
+  updateUser: { method: 'PATCH', path: '/users/:id', label: 'Cập nhật quyền người dùng' },
+  disableUser: { method: 'DELETE', path: '/users/:id', label: 'Xóa người dùng' },
+  logs: { method: 'GET', path: '/access-logs', label: 'Tải lịch sử ra vào' },
+  clearLogs: { method: 'DELETE', path: '/access-logs', label: 'Xóa lịch sử ra vào' },
+  commands: { method: 'GET', path: '/lock/commands', label: 'Tải lệnh khóa cửa' },
+  lock: { method: 'POST', path: '/lock/lock', label: 'Khóa cửa' },
+  unlock: { method: 'POST', path: '/lock/unlock', label: 'Mở cửa' },
+  recognition: { method: 'POST', path: '/recognition-events', label: 'Quét khuôn mặt' }
 };
 
 const state = {
@@ -51,26 +52,26 @@ document.querySelector('#app').innerHTML = `
       <h1>Face Door Access</h1>
     </div>
     <div class="runtime-strip">
-      <div class="status-pill" id="apiStatus">API chưa kiểm tra</div>
-      <div class="status-pill" id="mqttStatus">MQTT chưa kiểm tra</div>
-      <div class="status-pill" id="wsStatus">WebSocket chưa kết nối</div>
+      <div class="status-pill" id="apiStatus">Hệ thống chưa kiểm tra</div>
+      <div class="status-pill" id="mqttStatus">Cửa chưa kiểm tra</div>
+      <div class="status-pill" id="wsStatus">Kết nối trực tiếp chưa bật</div>
     </div>
   </header>
 
   <main class="dashboard-shell">
-    <section class="toolbar" aria-label="Cấu hình API">
+    <section class="toolbar" aria-label="Cấu hình kết nối">
       <div class="toolbar-title">
-        <span>Backend connection</span>
-        <strong id="lastRequestBox">Chưa gọi API</strong>
+        <span>Kết nối hệ thống</span>
+        <strong id="lastRequestBox">Chưa có thao tác</strong>
       </div>
       <div class="toolbar-fields">
         <label>
-          Backend API
+          Địa chỉ hệ thống
           <input id="apiBaseInput" spellcheck="false" />
         </label>
         <label>
-          API key
-          <input id="apiKeyInput" type="password" spellcheck="false" placeholder="Nhập API_KEY nếu backend bật bảo mật" />
+          Mã truy cập
+          <input id="apiKeyInput" type="password" spellcheck="false" placeholder="Nhập mã truy cập" />
         </label>
       </div>
       <div class="toolbar-actions">
@@ -86,19 +87,19 @@ document.querySelector('#app').innerHTML = `
         <span id="deviceMetricMeta" class="metric-meta">Chưa có dữ liệu</span>
       </article>
       <article class="metric">
-        <span class="metric-label">Latest access</span>
+        <span class="metric-label">Lần ra vào mới nhất</span>
         <strong id="latestMetric">N/A</strong>
         <span id="latestMetricMeta" class="metric-meta">Chưa có log</span>
       </article>
       <article class="metric">
-        <span class="metric-label">Queued commands</span>
+        <span class="metric-label">Lệnh đang chờ</span>
         <strong id="queuedMetric">0</strong>
         <span id="queuedMetricMeta" class="metric-meta">Lệnh đang chờ thiết bị</span>
       </article>
       <article class="metric">
-        <span class="metric-label">Alerts</span>
+        <span class="metric-label">Cảnh báo</span>
         <strong id="alertMetric">0</strong>
-        <span id="alertMetricMeta" class="metric-meta">Tự tính từ API hiện có</span>
+        <span id="alertMetricMeta" class="metric-meta">Không có cảnh báo</span>
       </article>
     </section>
 
@@ -106,10 +107,10 @@ document.querySelector('#app').innerHTML = `
       <section class="panel device-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Control</p>
+            <p class="section-kicker">Điều khiển</p>
             <h2>Thiết bị và lệnh khóa</h2>
           </div>
-          <button id="refreshDevicesBtn" type="button" class="secondary">Refresh</button>
+          <button id="refreshDevicesBtn" type="button" class="secondary">Làm mới</button>
         </div>
         <div id="deviceControlList" class="device-grid"></div>
       </section>
@@ -117,8 +118,8 @@ document.querySelector('#app').innerHTML = `
       <section class="panel realtime-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Realtime</p>
-            <h2>Sự kiện WebSocket</h2>
+            <p class="section-kicker">Hoạt động mới</p>
+            <h2>Dòng sự kiện trực tiếp</h2>
           </div>
           <button id="connectWsBtn" type="button" class="secondary">Kết nối lại</button>
         </div>
@@ -128,21 +129,24 @@ document.querySelector('#app').innerHTML = `
       <section class="panel history-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Latest / History</p>
+            <p class="section-kicker">Lịch sử</p>
             <h2>Lịch sử ra vào</h2>
           </div>
-          <button id="refreshLogsBtn" type="button" class="secondary">Refresh</button>
+          <div class="panel-actions">
+            <button id="refreshLogsBtn" type="button" class="secondary">Làm mới</button>
+            <button id="clearLogsBtn" type="button" class="danger">Xóa lịch sử</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Thời gian</th>
-                <th>Action</th>
-                <th>Result</th>
-                <th>Device</th>
-                <th>User</th>
-                <th>Reason</th>
+                <th>Hành động</th>
+                <th>Kết quả</th>
+                <th>Cửa</th>
+                <th>Người</th>
+                <th>Lý do</th>
               </tr>
             </thead>
             <tbody id="logsTable"></tbody>
@@ -153,7 +157,7 @@ document.querySelector('#app').innerHTML = `
       <section class="panel alerts-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Alerts</p>
+            <p class="section-kicker">Cảnh báo</p>
             <h2>Cảnh báo vận hành</h2>
           </div>
         </div>
@@ -163,17 +167,17 @@ document.querySelector('#app').innerHTML = `
       <section class="panel users-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Users</p>
+            <p class="section-kicker">Người dùng</p>
             <h2>Người được phép</h2>
           </div>
-          <button id="refreshUsersBtn" type="button" class="secondary">Refresh</button>
+          <button id="refreshUsersBtn" type="button" class="secondary">Làm mới</button>
         </div>
         <form id="createUserForm" class="inline-form">
           <input id="userNameInput" placeholder="Tên người dùng" required />
           <select id="userRoleInput">
-            <option value="admin">admin</option>
-            <option value="resident">resident</option>
-            <option value="guest">guest</option>
+            <option value="admin">Admin</option>
+            <option value="resident">Cư dân</option>
+            <option value="guest">Khách</option>
           </select>
           <button type="submit">Thêm</button>
         </form>
@@ -183,7 +187,7 @@ document.querySelector('#app').innerHTML = `
       <section class="panel reports-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Reports</p>
+            <p class="section-kicker">Tổng kết</p>
             <h2>Báo cáo nhanh</h2>
           </div>
         </div>
@@ -193,7 +197,7 @@ document.querySelector('#app').innerHTML = `
       <section class="panel ai-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">Camera Scan</p>
+            <p class="section-kicker">Quét camera</p>
             <h2>Quét mặt admin để mở cửa</h2>
           </div>
         </div>
@@ -217,17 +221,7 @@ document.querySelector('#app').innerHTML = `
             <button id="stopCameraBtn" type="button" class="secondary">Tắt</button>
           </div>
         </form>
-        <pre id="decisionBox" class="code-box">Chưa có event.</pre>
-      </section>
-
-      <section class="panel api-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="section-kicker">API Contract</p>
-            <h2>Endpoint dashboard đang gọi</h2>
-          </div>
-        </div>
-        <div class="endpoint-grid" id="endpointGrid"></div>
+        <div id="decisionBox" class="decision-box">Chưa có kết quả quét.</div>
       </section>
     </section>
   </main>
@@ -255,7 +249,6 @@ const elements = {
   reportsList: document.querySelector('#reportsList'),
   usersList: document.querySelector('#usersList'),
   eventStream: document.querySelector('#eventStream'),
-  endpointGrid: document.querySelector('#endpointGrid'),
   lastRequestBox: document.querySelector('#lastRequestBox'),
   toast: document.querySelector('#toast'),
   recognitionDeviceInput: document.querySelector('#recognitionDeviceInput'),
@@ -272,6 +265,7 @@ document.querySelector('#saveConfigBtn').addEventListener('click', saveConfig);
 document.querySelector('#refreshAllBtn').addEventListener('click', refreshAll);
 document.querySelector('#refreshDevicesBtn').addEventListener('click', loadDevices);
 document.querySelector('#refreshLogsBtn').addEventListener('click', loadLogsAndCommands);
+document.querySelector('#clearLogsBtn').addEventListener('click', clearAccessHistory);
 document.querySelector('#refreshUsersBtn').addEventListener('click', loadUsers);
 document.querySelector('#connectWsBtn').addEventListener('click', connectWebSocket);
 document.querySelector('#createUserForm').addEventListener('submit', createUser);
@@ -282,7 +276,6 @@ document.querySelector('#stopCameraBtn').addEventListener('click', stopCamera);
 elements.deviceControlList.addEventListener('click', handleDeviceAction);
 elements.usersList.addEventListener('click', handleUserAction);
 
-renderEndpointGrid();
 refreshAll();
 
 async function refreshAll() {
@@ -293,7 +286,7 @@ async function refreshAll() {
     await loadHealth();
     await Promise.all([loadDevices(), loadUsers(), loadLogsAndCommands()]);
     connectWebSocket();
-    showToast('Đã tải dữ liệu dashboard.');
+    showToast('Đã tải dữ liệu.');
   } catch (error) {
     state.error = error.message;
     addLocalEvent('error', error.message);
@@ -341,7 +334,7 @@ async function requestApi(endpoint, options = {}) {
   const url = `${getApiBase()}${path}${query}`;
   const method = options.method || endpoint.method;
 
-  state.lastRequest = {
+    state.lastRequest = {
     method,
     path: `/api${path}${query}`,
     label: endpoint.label,
@@ -366,7 +359,7 @@ async function requestApi(endpoint, options = {}) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok || payload.success === false) {
-    const message = payload.message || `${method} ${path} failed with ${response.status}`;
+    const message = payload.message || `Thao tác không thành công (${response.status})`;
     throw new Error(message);
   }
 
@@ -386,8 +379,24 @@ function saveConfig() {
     state.socket.close();
   }
 
-  showToast('Đã lưu cấu hình API.');
+  showToast('Đã lưu cấu hình.');
   refreshAll();
+}
+
+async function clearAccessHistory() {
+  const confirmed = window.confirm('Xóa toàn bộ lịch sử ra vào?');
+  if (!confirmed) return;
+
+  try {
+    const payload = await requestApi(ENDPOINTS.clearLogs);
+    state.logs = [];
+    addLocalEvent('history.cleared', payload.data);
+    showToast('Đã xóa lịch sử ra vào.');
+    await loadLogsAndCommands();
+  } catch (error) {
+    showToast(error.message);
+    addLocalEvent('error', error.message);
+  }
 }
 
 async function handleDeviceAction(event) {
@@ -403,10 +412,10 @@ async function handleDeviceAction(event) {
       const payload = await requestApi(endpoint, {
         body: {
           deviceId,
-          reason: `dashboard_${action}`
+          reason: `manual_${action}`
         }
       });
-      addLocalEvent('command.created', payload.data?.command || payload.data);
+      addLocalEvent('door.command', payload.data?.command || payload.data);
       showToast(action === 'unlock' ? 'Đã gửi lệnh mở khóa.' : 'Đã gửi lệnh khóa.');
       await loadLogsAndCommands();
       return;
@@ -420,7 +429,7 @@ async function handleDeviceAction(event) {
           lastSeenAt: new Date().toISOString()
         }
       });
-      showToast(`Đã cập nhật thiết bị ${action}.`);
+      showToast(action === 'online' ? 'Đã đánh dấu cửa đang kết nối.' : 'Đã đánh dấu cửa mất kết nối.');
       await loadDevices();
     }
   } catch (error) {
@@ -456,7 +465,9 @@ async function handleUserAction(event) {
     await requestApi(ENDPOINTS.disableUser, {
       params: { id: userId }
     });
-    showToast('Đã vô hiệu hóa user.');
+    delete state.faceProfiles[userId];
+    persistFaceProfiles();
+    showToast('Đã xóa user khỏi danh sách hoạt động.');
     await loadUsers();
   } catch (error) {
     showToast(error.message);
@@ -513,7 +524,9 @@ async function sendRecognitionEvent(event) {
       }
     });
 
-    elements.decisionBox.textContent = JSON.stringify(payload, null, 2);
+    elements.decisionBox.textContent = payload.decision === 'unlock'
+      ? `Đã mở cửa cho ${selectedUser.name}. Độ khớp ${Math.round(match.score * 100)}%.`
+      : 'Chưa thể mở cửa.';
     addLocalEvent('recognition.sent', payload.data);
     showToast(payload.message || 'Đã gửi recognition event.');
     await loadLogsAndCommands();
@@ -581,7 +594,7 @@ async function scanAndUnlock(event) {
   }
 
   if (!selectedUser) {
-    showToast('Chọn user admin trước khi quét.');
+    showToast('Chọn người cần quét trước.');
     return;
   }
 
@@ -626,7 +639,9 @@ async function scanAndUnlock(event) {
       }
     });
 
-    elements.decisionBox.textContent = JSON.stringify(payload, null, 2);
+    elements.decisionBox.textContent = payload.decision === 'unlock'
+      ? `Đã mở cửa cho ${selectedUser.name}. Độ khớp ${Math.round(match.score * 100)}%.`
+      : 'Chưa thể mở cửa.';
     addLocalEvent('face.scan.unlock', payload.data);
     setScanStatus(payload.decision === 'unlock' ? 'Đã nhận diện admin - mở cửa' : 'Từ chối truy cập', payload.decision === 'unlock' ? 'ok' : 'error');
     showToast(payload.message || 'Đã quét mặt.');
@@ -690,7 +705,7 @@ async function sendDeniedRecognition(deviceId, userId, reason) {
         capturedAt: new Date().toISOString()
       }
     });
-    elements.decisionBox.textContent = JSON.stringify({ ...payload, reason }, null, 2);
+    elements.decisionBox.textContent = `Không mở cửa. ${reason}.`;
     addLocalEvent('face.scan.denied', { reason, data: payload.data });
     setScanStatus(reason, 'error');
     showToast('Không mở cửa: ' + reason);
@@ -798,24 +813,23 @@ function renderAll() {
   renderAlerts();
   renderReports();
   renderRecognitionOptions();
-  renderEndpointGrid();
 }
 
 function renderRuntimeStatus() {
   setPill(
     elements.apiStatus,
-    state.health ? `API ${state.health.status}` : state.error ? 'API lỗi' : 'API chưa kiểm tra',
+    state.health ? 'Hệ thống sẵn sàng' : state.error ? 'Hệ thống lỗi' : 'Hệ thống chưa kiểm tra',
     state.health ? 'ok' : state.error ? 'error' : 'idle'
   );
 
   const mqtt = state.health?.mqtt;
   const mqttLabel = mqtt
-    ? `MQTT ${mqtt.enabled ? (mqtt.connected ? 'connected' : 'disconnected') : 'disabled'}`
-    : 'MQTT chưa kiểm tra';
+    ? `Cửa ${mqtt.enabled ? (mqtt.connected ? 'đã kết nối' : 'mất kết nối') : 'chưa bật'}`
+    : 'Cửa chưa kiểm tra';
   setPill(elements.mqttStatus, mqttLabel, mqtt?.connected ? 'ok' : mqtt?.enabled ? 'warn' : 'idle');
 
   const socketOk = state.socketState === 'connected';
-  const socketLabel = `WebSocket ${state.socketState}`;
+  const socketLabel = socketOk ? 'Trực tiếp đang bật' : 'Trực tiếp chưa kết nối';
   setPill(elements.wsStatus, socketLabel, socketOk ? 'ok' : state.socketState === 'error' ? 'error' : 'idle');
 }
 
@@ -830,13 +844,13 @@ function renderMetrics() {
     ? `${state.devices.length - onlineDevices} thiết bị offline`
     : 'Chưa có thiết bị';
 
-  elements.latestMetric.textContent = latestLog ? latestLog.result : 'N/A';
+  elements.latestMetric.textContent = latestLog ? formatResult(latestLog.result) : 'N/A';
   elements.latestMetricMeta.textContent = latestLog
     ? `${latestLog.action} - ${formatDate(latestLog.createdAt)}`
     : 'Chưa có access log';
 
   elements.queuedMetric.textContent = String(queuedCommands);
-  elements.queuedMetricMeta.textContent = `${state.commands.length} command gần nhất`;
+  elements.queuedMetricMeta.textContent = `${state.commands.length} lệnh gần nhất`;
 
   elements.alertMetric.textContent = String(alerts.length);
   elements.alertMetricMeta.textContent = alerts[0]?.message || 'Không có cảnh báo nghiêm trọng';
@@ -844,7 +858,7 @@ function renderMetrics() {
 
 function renderDevices() {
   if (!state.devices.length) {
-    elements.deviceControlList.innerHTML = emptyState('Chưa có thiết bị. Backend sẽ seed sẵn door_lock_001 khi chạy.');
+    elements.deviceControlList.innerHTML = emptyState('Chưa có thiết bị cửa.');
     return;
   }
 
@@ -858,20 +872,20 @@ function renderDevices() {
           <div class="device-title">
             <div>
               <strong>${escapeHtml(device.name)}</strong>
-              <span class="mono">${escapeHtml(device.id)}</span>
+              <span class="meta">${escapeHtml(formatDeviceType(device.type))}</span>
             </div>
-            <span class="mini-pill ${statusTone}">${escapeHtml(device.status)}</span>
+            <span class="mini-pill ${statusTone}">${escapeHtml(formatDeviceStatus(device.status))}</span>
           </div>
           <dl class="device-meta">
-            <div><dt>Type</dt><dd>${escapeHtml(device.type)}</dd></div>
-            <div><dt>Battery</dt><dd>${device.batteryLevel ?? 'N/A'}</dd></div>
-            <div><dt>Last seen</dt><dd>${escapeHtml(formatDate(device.lastSeenAt))}</dd></div>
+            <div><dt>Loại</dt><dd>${escapeHtml(formatDeviceType(device.type))}</dd></div>
+            <div><dt>Pin</dt><dd>${device.batteryLevel ?? 'N/A'}</dd></div>
+            <div><dt>Lần cuối</dt><dd>${escapeHtml(formatDate(device.lastSeenAt))}</dd></div>
           </dl>
           <div class="button-row">
-            <button type="button" data-action="unlock" data-device-id="${escapeAttr(device.id)}" title="POST /api/lock/unlock">Mở khóa</button>
-            <button type="button" data-action="lock" data-device-id="${escapeAttr(device.id)}" class="danger" title="POST /api/lock/lock">Khóa cửa</button>
-            <button type="button" data-action="online" data-device-id="${escapeAttr(device.id)}" class="secondary" title="PATCH /api/devices/:id/status">Online</button>
-            <button type="button" data-action="offline" data-device-id="${escapeAttr(device.id)}" class="secondary" title="PATCH /api/devices/:id/status">Offline</button>
+            <button type="button" data-action="unlock" data-device-id="${escapeAttr(device.id)}">Mở khóa</button>
+            <button type="button" data-action="lock" data-device-id="${escapeAttr(device.id)}" class="danger">Khóa cửa</button>
+            <button type="button" data-action="online" data-device-id="${escapeAttr(device.id)}" class="secondary">Đang kết nối</button>
+            <button type="button" data-action="offline" data-device-id="${escapeAttr(device.id)}" class="secondary">Mất kết nối</button>
           </div>
         </article>
       `;
@@ -891,11 +905,11 @@ function renderLogs() {
       (log) => `
         <tr>
           <td>${escapeHtml(formatDate(log.createdAt))}</td>
-          <td><span class="mini-pill">${escapeHtml(log.action)}</span></td>
-          <td><span class="mini-pill ${log.result === 'allowed' ? 'ok' : log.result === 'denied' ? 'error' : 'idle'}">${escapeHtml(log.result)}</span></td>
-          <td class="mono">${escapeHtml(log.deviceId || 'N/A')}</td>
-          <td class="mono">${escapeHtml(log.userId || 'N/A')}</td>
-          <td>${escapeHtml(log.reason || 'N/A')}</td>
+          <td><span class="mini-pill">${escapeHtml(formatAction(log.action))}</span></td>
+          <td><span class="mini-pill ${log.result === 'allowed' ? 'ok' : log.result === 'denied' ? 'error' : 'idle'}">${escapeHtml(formatResult(log.result))}</span></td>
+          <td>${escapeHtml(getDeviceName(log.deviceId))}</td>
+          <td>${escapeHtml(getUserName(log.userId))}</td>
+          <td>${escapeHtml(formatReason(log.reason))}</td>
         </tr>
       `
     )
@@ -903,12 +917,14 @@ function renderLogs() {
 }
 
 function renderUsers() {
-  if (!state.users.length) {
-    elements.usersList.innerHTML = emptyState('Chưa có user. Tạo user để test recognition event.');
+  const visibleUsers = state.users.filter((user) => user.status === 'active');
+
+  if (!visibleUsers.length) {
+    elements.usersList.innerHTML = emptyState('Chưa có người dùng. Thêm admin để bắt đầu.');
     return;
   }
 
-  elements.usersList.innerHTML = state.users
+  elements.usersList.innerHTML = visibleUsers
     .slice(0, 8)
     .map(
       (user) => {
@@ -918,14 +934,14 @@ function renderUsers() {
         <article class="row-item">
           <div>
             <strong>${escapeHtml(user.name)}</strong>
-            <span class="meta">${escapeHtml(user.role)} - ${hasFaceProfile ? 'đã lưu mặt' : 'chưa lưu mặt'} - <span class="mono">${escapeHtml(user.id)}</span></span>
+            <span class="meta">${escapeHtml(formatRole(user.role))} - ${hasFaceProfile ? 'đã lưu mặt' : 'chưa lưu mặt'}</span>
           </div>
           <div class="row-actions">
-            <span class="mini-pill ${user.status === 'active' ? 'ok' : 'idle'}">${escapeHtml(user.status)}</span>
-            <button type="button" data-user-action="${user.role === 'admin' ? 'make-guest' : 'make-admin'}" data-user-id="${escapeAttr(user.id)}" class="secondary small">${user.role === 'admin' ? 'Guest' : 'Admin'}</button>
+            <span class="mini-pill ${user.status === 'active' ? 'ok' : 'idle'}">${escapeHtml(formatUserStatus(user.status))}</span>
+            <button type="button" data-user-action="${user.role === 'admin' ? 'make-guest' : 'make-admin'}" data-user-id="${escapeAttr(user.id)}" class="secondary small">${user.role === 'admin' ? 'Khách' : 'Admin'}</button>
             ${
               user.status === 'active'
-                ? `<button type="button" data-user-action="disable" data-user-id="${escapeAttr(user.id)}" class="secondary small">Disable</button>`
+                ? `<button type="button" data-user-action="disable" data-user-id="${escapeAttr(user.id)}" class="danger small">Xóa</button>`
                 : ''
             }
           </div>
@@ -959,14 +975,14 @@ function renderAlerts() {
 function renderReports() {
   const allowed = state.logs.filter((log) => log.result === 'allowed').length;
   const denied = state.logs.filter((log) => log.result === 'denied').length;
-  const manualCommands = state.commands.filter((command) => command.reason === 'manual' || command.reason?.startsWith('dashboard')).length;
+  const manualCommands = state.commands.filter((command) => command.reason === 'manual' || command.reason?.startsWith('manual')).length;
   const activeUsers = state.users.filter((user) => user.status === 'active').length;
 
   const reports = [
-    ['Allowed', allowed, 'access_logs.result = allowed'],
-    ['Denied', denied, 'access_logs.result = denied'],
-    ['Manual commands', manualCommands, 'lock_commands.reason'],
-    ['Active users', activeUsers, 'users.status = active']
+    ['Đã mở cửa', allowed, 'Lượt hợp lệ'],
+    ['Bị từ chối', denied, 'Lượt không hợp lệ'],
+    ['Lệnh thủ công', manualCommands, 'Từ bảng điều khiển'],
+    ['Người dùng', activeUsers, 'Đang được phép dùng']
   ];
 
   elements.reportsList.innerHTML = reports
@@ -992,32 +1008,18 @@ function renderRecognitionOptions() {
     '<option value="">Chọn user</option>',
     ...activeUsers.map((user) => {
       const profile = state.faceProfiles[user.id] ? ' / đã lưu mặt' : '';
-      return `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)} (${escapeHtml(user.role)}${profile})</option>`;
+      return `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)} (${escapeHtml(formatRole(user.role))}${profile})</option>`;
     })
   ].join('');
 }
 
-function renderEndpointGrid() {
-  elements.endpointGrid.innerHTML = Object.values(ENDPOINTS)
-    .map(
-      (endpoint) => `
-        <article class="endpoint-item">
-          <span class="method ${endpoint.method.toLowerCase()}">${endpoint.method}</span>
-          <code>/api${escapeHtml(endpoint.path)}</code>
-          <span>${escapeHtml(endpoint.label)}</span>
-        </article>
-      `
-    )
-    .join('');
-}
-
 function renderLastRequest() {
   if (!state.lastRequest) {
-    elements.lastRequestBox.textContent = 'Chưa gọi API';
+    elements.lastRequestBox.textContent = 'Chưa có thao tác';
     return;
   }
 
-  elements.lastRequestBox.textContent = `${state.lastRequest.method} ${state.lastRequest.path} lúc ${state.lastRequest.at}`;
+  elements.lastRequestBox.textContent = `${state.lastRequest.label} lúc ${state.lastRequest.at}`;
 }
 
 function addLocalEvent(type, data) {
@@ -1033,22 +1035,27 @@ function addLocalEvent(type, data) {
 
 function renderEvents() {
   if (!state.events.length) {
-    elements.eventStream.innerHTML = emptyState('Chưa có realtime event.');
+    elements.eventStream.innerHTML = emptyState('Chưa có hoạt động mới.');
     return;
   }
 
   elements.eventStream.innerHTML = state.events
-    .map(
-      (event) => `
-        <article class="event-item">
-          <div>
-            <strong>${escapeHtml(event.type)}</strong>
-            <span>${escapeHtml(formatDate(event.at))}</span>
+    .map((event) => {
+      const view = describeEvent(event);
+
+      return `
+        <article class="event-item ${view.tone}">
+          <div class="event-icon">${escapeHtml(view.icon)}</div>
+          <div class="event-copy">
+            <div>
+              <strong>${escapeHtml(view.title)}</strong>
+              <span>${escapeHtml(formatDate(event.at))}</span>
+            </div>
+            <p>${escapeHtml(view.message)}</p>
           </div>
-          <pre>${escapeHtml(JSON.stringify(event.data, null, 2))}</pre>
         </article>
-      `
-    )
+      `;
+    })
     .join('');
 }
 
@@ -1058,7 +1065,7 @@ function collectAlerts() {
   if (state.error) {
     alerts.push({
       level: 'critical',
-      title: 'API error',
+      title: 'Hệ thống gặp lỗi',
       message: state.error
     });
   }
@@ -1068,7 +1075,7 @@ function collectAlerts() {
     .forEach((device) => {
       alerts.push({
         level: 'warning',
-        title: 'Device offline',
+        title: 'Cửa mất kết nối',
         message: `${device.name} đang ở trạng thái ${device.status}`
       });
     });
@@ -1077,7 +1084,7 @@ function collectAlerts() {
   recentDenied.forEach((log) => {
     alerts.push({
       level: 'critical',
-      title: 'Denied access',
+      title: 'Từ chối mở cửa',
       message: `${log.deviceId || 'device'} từ chối truy cập lúc ${formatDate(log.createdAt)}`
     });
   });
@@ -1087,8 +1094,8 @@ function collectAlerts() {
     .forEach((command) => {
       alerts.push({
         level: 'critical',
-        title: 'Command failed',
-        message: `${command.action} thất bại trên ${command.deviceId}`
+        title: 'Lệnh cửa thất bại',
+        message: `${formatAction(command.action)} thất bại trên ${getDeviceName(command.deviceId)}`
       });
     });
 
@@ -1125,6 +1132,160 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('vi-VN');
+}
+
+function formatAction(value) {
+  const labels = {
+    unlock: 'Mở cửa',
+    lock: 'Khóa cửa',
+    deny: 'Từ chối'
+  };
+
+  return labels[value] || value || 'N/A';
+}
+
+function formatResult(value) {
+  const labels = {
+    allowed: 'Đã mở',
+    denied: 'Từ chối',
+    queued: 'Đang chờ',
+    success: 'Thành công',
+    failed: 'Thất bại'
+  };
+
+  return labels[value] || value || 'N/A';
+}
+
+function formatReason(value) {
+  const labels = {
+    recognized_user: 'Khuôn mặt admin hợp lệ',
+    unknown_or_inactive_user: 'Không đúng quyền hoặc chưa hoạt động',
+    manual_unlock: 'Mở thủ công',
+    manual_lock: 'Khóa thủ công',
+    manual: 'Thao tác thủ công'
+  };
+
+  return labels[value] || value || 'N/A';
+}
+
+function formatRole(value) {
+  const labels = {
+    admin: 'Admin',
+    resident: 'Cư dân',
+    guest: 'Khách'
+  };
+
+  return labels[value] || value || 'N/A';
+}
+
+function formatUserStatus(value) {
+  const labels = {
+    active: 'Đang dùng',
+    inactive: 'Đã xóa'
+  };
+
+  return labels[value] || value || 'N/A';
+}
+
+function formatDeviceType(value) {
+  const labels = {
+    door_lock: 'Khóa cửa'
+  };
+
+  return labels[value] || value || 'Thiết bị';
+}
+
+function formatDeviceStatus(value) {
+  const labels = {
+    online: 'Đang kết nối',
+    offline: 'Mất kết nối'
+  };
+
+  return labels[value] || value || 'N/A';
+}
+
+function getUserName(userId) {
+  if (!userId) return 'Khách lạ';
+  return state.users.find((user) => user.id === userId)?.name || 'Người dùng đã xóa';
+}
+
+function getDeviceName(deviceId) {
+  if (!deviceId) return 'Cửa không xác định';
+  return state.devices.find((device) => device.id === deviceId)?.name || 'Cửa chính';
+}
+
+function describeEvent(event) {
+  const data = event.data || {};
+
+  if (event.type === 'face.scan.unlock' || data.command?.action === 'unlock') {
+    return {
+      icon: '✓',
+      tone: 'success',
+      title: 'Cửa đã được mở',
+      message: `${getUserName(data.event?.userId || data.command?.userId)} quét mặt thành công.`
+    };
+  }
+
+  if (event.type === 'face.scan.denied' || data.event?.decision === 'deny') {
+    return {
+      icon: '!',
+      tone: 'danger',
+      title: 'Từ chối mở cửa',
+      message: event.data?.reason || 'Khuôn mặt hoặc quyền truy cập không hợp lệ.'
+    };
+  }
+
+  if (event.type === 'history.cleared') {
+    return {
+      icon: '⌫',
+      tone: 'neutral',
+      title: 'Đã xóa lịch sử',
+      message: `Đã xóa ${data.deleted ?? 0} dòng lịch sử ra vào.`
+    };
+  }
+
+  if (event.type === 'door.command') {
+    return {
+      icon: '↗',
+      tone: 'neutral',
+      title: 'Đã gửi lệnh tới cửa',
+      message: formatAction(data.action || data.command?.action)
+    };
+  }
+
+  if (event.type === 'ws.message') {
+    const payload = data.data || data;
+    return describeEvent({
+      type: payload.type || 'system',
+      data: payload.data || payload,
+      at: event.at
+    });
+  }
+
+  if (event.type === 'connection') {
+    return {
+      icon: '●',
+      tone: 'success',
+      title: 'Kết nối trực tiếp đã sẵn sàng',
+      message: 'Các hoạt động mới sẽ xuất hiện tại đây.'
+    };
+  }
+
+  if (event.type === 'error') {
+    return {
+      icon: '!',
+      tone: 'danger',
+      title: 'Có lỗi xảy ra',
+      message: String(data)
+    };
+  }
+
+  return {
+    icon: '•',
+    tone: 'neutral',
+    title: 'Hoạt động mới',
+    message: 'Hệ thống vừa cập nhật trạng thái.'
+  };
 }
 
 function showToast(message) {
