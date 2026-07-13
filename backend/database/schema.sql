@@ -9,6 +9,27 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS app_accounts (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  display_name TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  password_salt TEXT NOT NULL,
+  failed_login_count INTEGER NOT NULL DEFAULT 0,
+  locked_until TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id TEXT PRIMARY KEY,
+  account_id TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (account_id) REFERENCES app_accounts(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS face_data (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -69,6 +90,9 @@ CREATE TABLE IF NOT EXISTS lock_commands (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+CREATE INDEX IF NOT EXISTS idx_app_accounts_username ON app_accounts(username);
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_token_hash ON auth_sessions(token_hash);
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires_at ON auth_sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_access_logs_created_at ON access_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_access_logs_user_id ON access_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_access_logs_device_id ON access_logs(device_id);

@@ -8,7 +8,8 @@ function errorHandler(error, req, res, next) {
   res.status(status).json({
     success: false,
     message: error.message || 'Lỗi hệ thống.',
-    errorCode: error.errorCode || 'INTERNAL_ERROR'
+    errorCode: error.errorCode || 'INTERNAL_ERROR',
+    remainingMs: error.remainingMs
   });
 }
 

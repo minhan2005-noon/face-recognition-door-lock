@@ -16,6 +16,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY package*.json ./
 COPY src ./src
 COPY database ./database
+COPY database/schema.sql ./schema.sql
 
 RUN mkdir -p /app/database && chown -R node:node /app
 

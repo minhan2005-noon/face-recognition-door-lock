@@ -5,13 +5,19 @@ const STORAGE_KEYS = {
   apiKey: 'doorLockDashboard.apiKey',
   faceProfiles: 'doorLockDashboard.faceProfiles',
   selectedDeviceId: 'doorLockDashboard.selectedDeviceId',
-  selectedScanUserId: 'doorLockDashboard.selectedScanUserId'
+  selectedScanUserId: 'doorLockDashboard.selectedScanUserId',
+  sessionToken: 'doorLockDashboard.sessionToken',
+  account: 'doorLockDashboard.account'
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY || 'minhan123';
 
 const ENDPOINTS = {
+  register: { method: 'POST', path: '/auth/register', label: 'Đăng ký' },
+  login: { method: 'POST', path: '/auth/login', label: 'Đăng nhập' },
+  me: { method: 'GET', path: '/auth/me', label: 'Kiểm tra đăng nhập' },
+  logout: { method: 'POST', path: '/auth/logout', label: 'Đăng xuất' },
   health: { method: 'GET', path: '/health', label: 'Kiểm tra hệ thống' },
   devices: { method: 'GET', path: '/devices', label: 'Tải trạng thái cửa' },
   updateDevice: { method: 'PATCH', path: '/devices/:id/status', label: 'Cập nhật trạng thái cửa' },
@@ -30,6 +36,9 @@ const ENDPOINTS = {
 const state = {
   apiBase: localStorage.getItem(STORAGE_KEYS.apiBase) || DEFAULT_API_BASE,
   apiKey: localStorage.getItem(STORAGE_KEYS.apiKey) || DEFAULT_API_KEY,
+  sessionToken: localStorage.getItem(STORAGE_KEYS.sessionToken) || '',
+  account: loadStoredAccount(),
+  authMode: 'login',
   health: null,
   devices: [],
   users: [],
@@ -68,6 +77,41 @@ document.querySelector('#app').innerHTML = `
   </header>
 
   <main class="dashboard-shell">
+    <section id="authPanel" class="auth-panel">
+      <div class="auth-copy">
+        <p class="section-kicker">Bảo mật hệ thống</p>
+        <h2 id="authTitle">Đăng nhập tài khoản</h2>
+        <p id="authSubtitle">Đăng nhập để điều khiển cửa và xem lịch sử ra vào.</p>
+      </div>
+      <form id="authForm" class="auth-form">
+        <label id="displayNameLabel" hidden>
+          Tên hiển thị
+          <input id="authDisplayNameInput" autocomplete="name" />
+        </label>
+        <label>
+          Tên đăng nhập
+          <input id="authUsernameInput" autocomplete="username" required />
+        </label>
+        <label>
+          Mật khẩu
+          <input id="authPasswordInput" type="password" autocomplete="current-password" required />
+        </label>
+        <div id="authLockNotice" class="auth-lock" hidden></div>
+        <div class="auth-actions">
+          <button id="authSubmitBtn" type="submit">Đăng nhập</button>
+          <button id="toggleAuthModeBtn" type="button" class="secondary">Tạo tài khoản</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="accountBar" class="account-bar" hidden>
+      <div>
+        <span>Đang đăng nhập</span>
+        <strong id="accountName">Tài khoản</strong>
+      </div>
+      <button id="logoutBtn" type="button" class="secondary">Đăng xuất</button>
+    </section>
+
     <section class="toolbar" aria-label="Cấu hình kết nối">
       <div class="toolbar-title">
         <span>Kết nối hệ thống</span>
@@ -266,10 +310,27 @@ const elements = {
   scanStatus: document.querySelector('#scanStatus'),
   decisionBox: document.querySelector('#decisionBox')
 };
+elements.authPanel = document.querySelector('#authPanel');
+elements.accountBar = document.querySelector('#accountBar');
+elements.authForm = document.querySelector('#authForm');
+elements.authTitle = document.querySelector('#authTitle');
+elements.authSubtitle = document.querySelector('#authSubtitle');
+elements.authDisplayNameInput = document.querySelector('#authDisplayNameInput');
+elements.authUsernameInput = document.querySelector('#authUsernameInput');
+elements.authPasswordInput = document.querySelector('#authPasswordInput');
+elements.authLockNotice = document.querySelector('#authLockNotice');
+elements.displayNameLabel = document.querySelector('#displayNameLabel');
+elements.authSubmitBtn = document.querySelector('#authSubmitBtn');
+elements.toggleAuthModeBtn = document.querySelector('#toggleAuthModeBtn');
+elements.accountName = document.querySelector('#accountName');
+elements.logoutBtn = document.querySelector('#logoutBtn');
 
 elements.apiBaseInput.value = state.apiBase;
 elements.apiKeyInput.value = state.apiKey;
 
+elements.authForm.addEventListener('submit', handleAuthSubmit);
+elements.toggleAuthModeBtn.addEventListener('click', toggleAuthMode);
+elements.logoutBtn.addEventListener('click', logout);
 document.querySelector('#saveConfigBtn').addEventListener('click', saveConfig);
 document.querySelector('#refreshAllBtn').addEventListener('click', refreshAll);
 document.querySelector('#refreshDevicesBtn').addEventListener('click', loadDevices);
@@ -287,9 +348,122 @@ elements.recognitionUserInput.addEventListener('change', handleScanUserChange);
 elements.deviceControlList.addEventListener('click', handleDeviceAction);
 elements.usersList.addEventListener('click', handleUserAction);
 
-refreshAll();
+bootAuth();
+
+async function bootAuth() {
+  renderAuthState();
+
+  if (!state.sessionToken) {
+    return;
+  }
+
+  try {
+    const payload = await requestApi(ENDPOINTS.me);
+    state.account = payload.data.account;
+    persistAccount();
+    renderAuthState();
+    await refreshAll();
+  } catch (error) {
+    clearSession();
+    renderAuthState();
+    showToast('Phiên đăng nhập đã hết hạn.');
+  }
+}
+
+function renderAuthState() {
+  const isLoggedIn = Boolean(state.sessionToken && state.account);
+  document.body.classList.toggle('is-authenticated', isLoggedIn);
+  elements.authPanel.hidden = isLoggedIn;
+  elements.accountBar.hidden = !isLoggedIn;
+  elements.accountName.textContent = state.account?.displayName || state.account?.username || 'Tài khoản';
+  renderAuthMode();
+}
+
+function renderAuthMode() {
+  const isRegister = state.authMode === 'register';
+  elements.authTitle.textContent = isRegister ? 'Đăng ký tài khoản' : 'Đăng nhập tài khoản';
+  elements.authSubtitle.textContent = isRegister
+    ? 'Tạo tài khoản quản trị để bắt đầu sử dụng hệ thống.'
+    : 'Đăng nhập để điều khiển cửa và xem lịch sử ra vào.';
+  elements.displayNameLabel.hidden = !isRegister;
+  elements.authSubmitBtn.textContent = isRegister ? 'Đăng ký' : 'Đăng nhập';
+  elements.toggleAuthModeBtn.textContent = isRegister ? 'Tôi đã có tài khoản' : 'Tạo tài khoản';
+  elements.authPasswordInput.autocomplete = isRegister ? 'new-password' : 'current-password';
+}
+
+function toggleAuthMode() {
+  state.authMode = state.authMode === 'login' ? 'register' : 'login';
+  elements.authLockNotice.hidden = true;
+  renderAuthMode();
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  elements.authLockNotice.hidden = true;
+
+  const body = {
+    username: elements.authUsernameInput.value,
+    password: elements.authPasswordInput.value
+  };
+
+  if (state.authMode === 'register') {
+    body.displayName = elements.authDisplayNameInput.value || elements.authUsernameInput.value;
+  }
+
+  try {
+    const endpoint = state.authMode === 'register' ? ENDPOINTS.register : ENDPOINTS.login;
+    const payload = await requestApi(endpoint, { body });
+    applyAuthPayload(payload.data);
+    elements.authPasswordInput.value = '';
+    showToast(state.authMode === 'register' ? 'Đăng ký thành công.' : 'Đăng nhập thành công.');
+    await refreshAll();
+  } catch (error) {
+    showAuthError(error);
+  }
+}
+
+function applyAuthPayload(data) {
+  state.sessionToken = data.session.token;
+  state.account = data.account;
+  localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
+  persistAccount();
+  renderAuthState();
+}
+
+function showAuthError(error) {
+  const seconds = error.remainingMs ? Math.ceil(error.remainingMs / 1000) : null;
+  elements.authLockNotice.textContent = seconds
+    ? `${error.message} Thời gian khóa còn khoảng ${seconds} giây.`
+    : error.message;
+  elements.authLockNotice.hidden = false;
+  showToast(error.message);
+}
+
+async function logout() {
+  try {
+    await requestApi(ENDPOINTS.logout);
+  } catch (error) {
+    // Session may already be expired; local cleanup is still correct.
+  }
+
+  clearSession();
+  renderAuthState();
+  showToast('Đã đăng xuất.');
+}
+
+function clearSession() {
+  state.sessionToken = '';
+  state.account = null;
+  localStorage.removeItem(STORAGE_KEYS.sessionToken);
+  localStorage.removeItem(STORAGE_KEYS.account);
+}
 
 async function refreshAll() {
+  if (!state.sessionToken) {
+    renderAuthState();
+    return;
+  }
+
   setLoading(true);
   state.error = null;
 
@@ -362,6 +536,10 @@ async function requestApi(endpoint, options = {}) {
     headers['X-API-Key'] = state.apiKey;
   }
 
+  if (state.sessionToken) {
+    headers['X-Session-Token'] = state.sessionToken;
+  }
+
   const response = await fetch(url, {
     method,
     headers,
@@ -372,7 +550,9 @@ async function requestApi(endpoint, options = {}) {
 
   if (!response.ok || payload.success === false) {
     const message = payload.message || `Thao tác không thành công (${response.status})`;
-    throw new Error(message);
+    const error = new Error(message);
+    error.remainingMs = payload.remainingMs;
+    throw error;
   }
 
   return payload;
@@ -1434,6 +1614,18 @@ function loadStoredFaceProfiles() {
 
 function persistFaceProfiles() {
   localStorage.setItem(STORAGE_KEYS.faceProfiles, JSON.stringify(state.faceProfiles));
+}
+
+function loadStoredAccount() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.account) || 'null');
+  } catch (error) {
+    return null;
+  }
+}
+
+function persistAccount() {
+  localStorage.setItem(STORAGE_KEYS.account, JSON.stringify(state.account));
 }
 
 function emptyState(message) {

@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const accessLogsRoutes = require('./routes/accessLogs');
+const authRoutes = require('./routes/auth');
 const devicesRoutes = require('./routes/devices');
 const healthRoutes = require('./routes/health');
 const lockRoutes = require('./routes/lock');
@@ -12,6 +13,7 @@ const usersRoutes = require('./routes/users');
 const apiKeyAuth = require('./middleware/apiKeyAuth');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
+const sessionAuth = require('./middleware/sessionAuth');
 
 const app = express();
 
@@ -20,7 +22,9 @@ app.use(express.json({ limit: '2mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api', apiKeyAuth);
+app.use('/api', sessionAuth);
 app.use('/api/users', usersRoutes);
 app.use('/api/devices', devicesRoutes);
 app.use('/api/access-logs', accessLogsRoutes);

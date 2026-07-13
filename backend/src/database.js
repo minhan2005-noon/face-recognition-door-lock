@@ -5,7 +5,11 @@ const sqlite3 = require('sqlite3').verbose();
 const databasePath =
   process.env.DATABASE_PATH ||
   path.join(__dirname, '..', 'database', 'door-lock.sqlite');
-const schemaPath = path.join(__dirname, '..', 'database', 'schema.sql');
+const schemaPath =
+  process.env.SCHEMA_PATH ||
+  (fs.existsSync(path.join(__dirname, '..', 'schema.sql'))
+    ? path.join(__dirname, '..', 'schema.sql')
+    : path.join(__dirname, '..', 'database', 'schema.sql'));
 
 fs.mkdirSync(path.dirname(databasePath), { recursive: true });
 
