@@ -41,8 +41,8 @@ const state = {
 document.querySelector('#app').innerHTML = `
   <header class="app-header">
     <div class="brand-block">
-      <p class="eyebrow">Face Recognition Door Lock</p>
-      <h1>Operations Dashboard</h1>
+      <p class="eyebrow">Khóa cửa nhận diện khuôn mặt</p>
+      <h1>Bảng điều khiển vận hành</h1>
     </div>
     <div class="runtime-strip">
       <div class="status-pill" id="apiStatus">API chưa kiểm tra</div>
@@ -53,16 +53,24 @@ document.querySelector('#app').innerHTML = `
 
   <main class="dashboard-shell">
     <section class="toolbar" aria-label="Cấu hình API">
-      <label>
-        Backend API
-        <input id="apiBaseInput" spellcheck="false" />
-      </label>
-      <label>
-        API key
-        <input id="apiKeyInput" type="password" spellcheck="false" placeholder="Nhập API_KEY nếu backend bật bảo mật" />
-      </label>
-      <button id="saveConfigBtn" type="button">Lưu cấu hình</button>
-      <button id="refreshAllBtn" type="button" class="secondary">Tải lại dữ liệu</button>
+      <div class="toolbar-title">
+        <span>Backend connection</span>
+        <strong id="lastRequestBox">Chưa gọi API</strong>
+      </div>
+      <div class="toolbar-fields">
+        <label>
+          Backend API
+          <input id="apiBaseInput" spellcheck="false" />
+        </label>
+        <label>
+          API key
+          <input id="apiKeyInput" type="password" spellcheck="false" placeholder="Nhập API_KEY nếu backend bật bảo mật" />
+        </label>
+      </div>
+      <div class="toolbar-actions">
+        <button id="saveConfigBtn" type="button">Lưu cấu hình</button>
+        <button id="refreshAllBtn" type="button" class="secondary">Tải lại</button>
+      </div>
     </section>
 
     <section class="metrics-grid" aria-label="Tổng quan">
@@ -89,7 +97,7 @@ document.querySelector('#app').innerHTML = `
     </section>
 
     <section class="content-grid">
-      <section class="panel panel-wide">
+      <section class="panel device-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Control</p>
@@ -100,7 +108,7 @@ document.querySelector('#app').innerHTML = `
         <div id="deviceControlList" class="device-grid"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel realtime-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Realtime</p>
@@ -111,7 +119,7 @@ document.querySelector('#app').innerHTML = `
         <div id="eventStream" class="event-stream"></div>
       </section>
 
-      <section class="panel panel-wide">
+      <section class="panel history-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Latest / History</p>
@@ -136,7 +144,7 @@ document.querySelector('#app').innerHTML = `
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel alerts-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Alerts</p>
@@ -146,7 +154,7 @@ document.querySelector('#app').innerHTML = `
         <div id="alertsList" class="stack-list"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel users-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Users</p>
@@ -166,7 +174,7 @@ document.querySelector('#app').innerHTML = `
         <div id="usersList" class="stack-list compact-list"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel reports-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Reports</p>
@@ -176,7 +184,7 @@ document.querySelector('#app').innerHTML = `
         <div id="reportsList" class="report-grid"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel ai-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">AI Test</p>
@@ -205,13 +213,12 @@ document.querySelector('#app').innerHTML = `
         <pre id="decisionBox" class="code-box">Chưa có event.</pre>
       </section>
 
-      <section class="panel panel-wide">
+      <section class="panel api-panel">
         <div class="panel-heading">
           <div>
             <p class="section-kicker">API Contract</p>
             <h2>Endpoint dashboard đang gọi</h2>
           </div>
-          <div id="lastRequestBox" class="last-request">Chưa gọi API</div>
         </div>
         <div class="endpoint-grid" id="endpointGrid"></div>
       </section>
