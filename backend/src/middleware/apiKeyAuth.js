@@ -1,9 +1,15 @@
 const crypto = require('crypto');
+const { getSessionToken } = require('./sessionAuth');
+const {
+  blockApiKeyBySessionToken,
+  forceLogoutForApiKeySpam,
+  getApiKeyBlockBySessionToken
+} = require('../services/authService');
 
 const apiKey = process.env.API_KEY;
 let didWarnDisabledApiKey = false;
 
-function apiKeyAuth(req, res, next) {
+async function apiKeyAuth(req, res, next) {
   if (!apiKey) {
     if (process.env.NODE_ENV !== 'test' && !didWarnDisabledApiKey) {
       console.warn('API key protection is disabled. Set API_KEY to protect private routes.');
@@ -13,18 +19,38 @@ function apiKeyAuth(req, res, next) {
     return;
   }
 
-  const providedKey = getProvidedApiKey(req);
+  try {
+    const sessionToken = getSessionToken(req);
+    const blockInfo = await getApiKeyBlockBySessionToken(sessionToken);
 
-  if (!isValidApiKey(providedKey)) {
-    res.status(401).json({
-      success: false,
-      message: 'API key không hợp lệ hoặc bị thiếu.',
-      errorCode: 'UNAUTHORIZED'
-    });
-    return;
+    if (blockInfo.blocked) {
+      await forceLogoutForApiKeySpam(sessionToken);
+      res.status(440).json({
+        success: false,
+        message: 'Bạn đã thao tác API key khi đang bị chặn. Phiên đăng nhập đã bị đăng xuất.',
+        errorCode: 'API_KEY_SPAM_LOGOUT',
+        remainingMs: blockInfo.remainingMs
+      });
+      return;
+    }
+
+    const providedKey = getProvidedApiKey(req);
+
+    if (!isValidApiKey(providedKey)) {
+      const result = await blockApiKeyBySessionToken(sessionToken);
+      res.status(423).json({
+        success: false,
+        message: 'Mã truy cập không đúng. Phần cấu hình bị chặn trong 5 phút.',
+        errorCode: 'API_KEY_BLOCKED',
+        remainingMs: result.remainingMs
+      });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    next(error);
   }
-
-  next();
 }
 
 function getProvidedApiKey(req) {

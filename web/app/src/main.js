@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
   selectedDeviceId: 'doorLockDashboard.selectedDeviceId',
   selectedScanUserId: 'doorLockDashboard.selectedScanUserId',
   sessionToken: 'doorLockDashboard.sessionToken',
-  account: 'doorLockDashboard.account'
+  account: 'doorLockDashboard.account',
+  apiKeyBlockedUntil: 'doorLockDashboard.apiKeyBlockedUntil'
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -39,6 +40,8 @@ const state = {
   sessionToken: localStorage.getItem(STORAGE_KEYS.sessionToken) || '',
   account: loadStoredAccount(),
   authMode: 'login',
+  apiKeyBlockedUntil: Number(localStorage.getItem(STORAGE_KEYS.apiKeyBlockedUntil) || 0),
+  apiKeyBlockTimer: null,
   health: null,
   devices: [],
   users: [],
@@ -280,6 +283,8 @@ document.querySelector('#app').innerHTML = `
 const elements = {
   apiBaseInput: document.querySelector('#apiBaseInput'),
   apiKeyInput: document.querySelector('#apiKeyInput'),
+  saveConfigBtn: document.querySelector('#saveConfigBtn'),
+  refreshAllBtn: document.querySelector('#refreshAllBtn'),
   apiStatus: document.querySelector('#apiStatus'),
   mqttStatus: document.querySelector('#mqttStatus'),
   wsStatus: document.querySelector('#wsStatus'),
@@ -326,8 +331,8 @@ elements.apiKeyInput.value = state.apiKey;
 elements.authForm.addEventListener('submit', handleAuthSubmit);
 elements.toggleAuthModeBtn.addEventListener('click', toggleAuthMode);
 elements.logoutBtn.addEventListener('click', logout);
-document.querySelector('#saveConfigBtn').addEventListener('click', saveConfig);
-document.querySelector('#refreshAllBtn').addEventListener('click', refreshAll);
+elements.saveConfigBtn.addEventListener('click', saveConfig);
+elements.refreshAllBtn.addEventListener('click', refreshAll);
 document.querySelector('#refreshDevicesBtn').addEventListener('click', loadDevices);
 document.querySelector('#refreshLogsBtn').addEventListener('click', loadLogsAndCommands);
 document.querySelector('#clearLogsBtn').addEventListener('click', clearAccessHistory);
@@ -372,6 +377,8 @@ function renderAuthState() {
   elements.accountBar.hidden = !isLoggedIn;
   elements.accountName.textContent = state.account?.displayName || state.account?.username || 'Tài khoản';
   renderAuthMode();
+  renderRuntimeStatus();
+  renderApiKeyGuard();
 }
 
 function renderAuthMode() {
@@ -420,6 +427,7 @@ async function handleAuthSubmit(event) {
 function applyAuthPayload(data) {
   state.sessionToken = data.session.token;
   state.account = data.account;
+  clearApiKeyBlock();
   localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
   persistAccount();
   renderAuthState();
@@ -427,9 +435,15 @@ function applyAuthPayload(data) {
 
 function showAuthError(error) {
   const seconds = error.remainingMs ? Math.ceil(error.remainingMs / 1000) : null;
+  const attemptsMessage = error.attemptsRemaining
+    ? ` Còn ${error.attemptsRemaining} lần trước khi khóa.`
+    : '';
+  const lockedSpamMessage = error.lockedLoginAttemptsRemaining
+    ? ` Còn ${error.lockedLoginAttemptsRemaining} lần cố đăng nhập khi đang khóa trước khi tài khoản bị xóa.`
+    : '';
   elements.authLockNotice.textContent = seconds
-    ? `${error.message} Thời gian khóa còn khoảng ${seconds} giây.`
-    : error.message;
+    ? `${error.message} Thời gian khóa còn khoảng ${seconds} giây.${lockedSpamMessage}`
+    : `${error.message}${attemptsMessage}${lockedSpamMessage}`;
   elements.authLockNotice.hidden = false;
   showToast(error.message);
 }
@@ -449,11 +463,22 @@ async function logout() {
 function clearSession() {
   state.sessionToken = '';
   state.account = null;
+  state.health = null;
+  state.error = null;
+  state.socketState = 'idle';
+  if (state.socket) {
+    state.socket.close();
+    state.socket = null;
+  }
   localStorage.removeItem(STORAGE_KEYS.sessionToken);
   localStorage.removeItem(STORAGE_KEYS.account);
 }
 
 async function refreshAll() {
+  if (handleApiKeyBlockedClick()) {
+    return;
+  }
+
   if (!state.sessionToken) {
     renderAuthState();
     return;
@@ -547,6 +572,10 @@ async function requestApi(endpoint, options = {}) {
     const message = payload.message || `Thao tác không thành công (${response.status})`;
     const error = new Error(message);
     error.remainingMs = payload.remainingMs;
+    error.errorCode = payload.errorCode;
+    error.attemptsRemaining = payload.attemptsRemaining;
+    error.lockedLoginAttemptsRemaining = payload.lockedLoginAttemptsRemaining;
+    handleSecurityError(error);
     throw error;
   }
 
@@ -554,6 +583,10 @@ async function requestApi(endpoint, options = {}) {
 }
 
 function saveConfig() {
+  if (handleApiKeyBlockedClick()) {
+    return;
+  }
+
   const apiBase = normalizeApiBase(elements.apiBaseInput.value || DEFAULT_API_BASE);
   const apiKey = elements.apiKeyInput.value.trim();
 
@@ -568,6 +601,83 @@ function saveConfig() {
 
   showToast('Đã lưu cấu hình.');
   refreshAll();
+}
+
+function handleSecurityError(error) {
+  if (error.errorCode === 'API_KEY_BLOCKED') {
+    startApiKeyBlock(error.remainingMs || 5 * 60 * 1000);
+    return;
+  }
+
+  if (error.errorCode === 'API_KEY_SPAM_LOGOUT') {
+    forceLocalLogout('Bạn đã bị đăng xuất vì thao tác mã truy cập khi đang bị chặn.');
+  }
+}
+
+function isApiKeyBlocked() {
+  return state.apiKeyBlockedUntil && Date.now() < state.apiKeyBlockedUntil;
+}
+
+function startApiKeyBlock(remainingMs) {
+  state.apiKeyBlockedUntil = Date.now() + remainingMs;
+  localStorage.setItem(STORAGE_KEYS.apiKeyBlockedUntil, String(state.apiKeyBlockedUntil));
+  renderApiKeyGuard();
+}
+
+function clearApiKeyBlock() {
+  state.apiKeyBlockedUntil = 0;
+  localStorage.removeItem(STORAGE_KEYS.apiKeyBlockedUntil);
+  if (state.apiKeyBlockTimer) {
+    window.clearTimeout(state.apiKeyBlockTimer);
+    state.apiKeyBlockTimer = null;
+  }
+  renderApiKeyGuard();
+}
+
+function renderApiKeyGuard() {
+  if (!elements.saveConfigBtn || !elements.refreshAllBtn) return;
+
+  if (!isApiKeyBlocked()) {
+    if (state.apiKeyBlockedUntil) {
+      clearApiKeyBlock();
+    }
+    elements.saveConfigBtn.textContent = 'Lưu cấu hình';
+    elements.saveConfigBtn.classList.remove('danger');
+    elements.refreshAllBtn.textContent = 'Tải lại';
+    elements.refreshAllBtn.classList.remove('danger');
+    return;
+  }
+
+  const remainingSeconds = Math.ceil((state.apiKeyBlockedUntil - Date.now()) / 1000);
+  const remainingLabel = formatDuration(remainingSeconds);
+  elements.saveConfigBtn.textContent = `Bị chặn X ${remainingLabel}`;
+  elements.saveConfigBtn.classList.add('danger');
+  elements.refreshAllBtn.textContent = `Bị chặn X`;
+  elements.refreshAllBtn.classList.add('danger');
+
+  if (!state.apiKeyBlockTimer) {
+    state.apiKeyBlockTimer = window.setTimeout(() => {
+      state.apiKeyBlockTimer = null;
+      renderApiKeyGuard();
+    }, 1000);
+  }
+}
+
+function handleApiKeyBlockedClick() {
+  if (!isApiKeyBlocked()) {
+    renderApiKeyGuard();
+    return false;
+  }
+
+  forceLocalLogout('Bạn đã bị đăng xuất vì tiếp tục thao tác mã truy cập khi đang bị chặn.');
+  return true;
+}
+
+function forceLocalLogout(message) {
+  clearSession();
+  renderAuthState();
+  renderAll();
+  showToast(message);
 }
 
 function handleScanDeviceChange() {
@@ -1112,6 +1222,13 @@ function renderAll() {
 }
 
 function renderRuntimeStatus() {
+  if (!state.sessionToken || !state.account) {
+    setPill(elements.apiStatus, 'Hệ thống chưa sẵn sàng', 'idle');
+    setPill(elements.mqttStatus, 'Cửa không kết nối', 'idle');
+    setPill(elements.wsStatus, 'Trực tiếp không bật', 'idle');
+    return;
+  }
+
   setPill(
     elements.apiStatus,
     state.health ? 'Hệ thống sẵn sàng' : state.error ? 'Hệ thống lỗi' : 'Hệ thống chưa kiểm tra',
@@ -1434,6 +1551,12 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('vi-VN');
+}
+
+function formatDuration(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
 function formatAction(value) {

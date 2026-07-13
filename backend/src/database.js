@@ -70,7 +70,23 @@ function exec(sql) {
 async function initDatabase() {
   await exec('PRAGMA foreign_keys = ON;');
   await exec(fs.readFileSync(schemaPath, 'utf8'));
+  await ensureAppAccountColumns();
   await seedDefaultDevice();
+}
+
+async function ensureAppAccountColumns() {
+  const columns = await all('PRAGMA table_info(app_accounts)');
+  const columnNames = new Set(columns.map((column) => column.name));
+  const missingColumns = [
+    ['lock_penalty_count', 'INTEGER NOT NULL DEFAULT 0'],
+    ['locked_login_attempt_count', 'INTEGER NOT NULL DEFAULT 0'],
+    ['api_key_blocked_until', 'TEXT'],
+    ['api_key_block_attempt_count', 'INTEGER NOT NULL DEFAULT 0']
+  ].filter(([name]) => !columnNames.has(name));
+
+  for (const [name, definition] of missingColumns) {
+    await run(`ALTER TABLE app_accounts ADD COLUMN ${name} ${definition}`);
+  }
 }
 
 async function seedDefaultDevice() {

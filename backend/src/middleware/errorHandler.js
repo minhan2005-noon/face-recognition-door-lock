@@ -9,7 +9,9 @@ function errorHandler(error, req, res, next) {
     success: false,
     message: error.message || 'Lỗi hệ thống.',
     errorCode: error.errorCode || 'INTERNAL_ERROR',
-    remainingMs: error.remainingMs
+    remainingMs: error.remainingMs,
+    attemptsRemaining: error.attemptsRemaining,
+    lockedLoginAttemptsRemaining: error.lockedLoginAttemptsRemaining
   });
 }
 

@@ -16,7 +16,11 @@ CREATE TABLE IF NOT EXISTS app_accounts (
   password_hash TEXT NOT NULL,
   password_salt TEXT NOT NULL,
   failed_login_count INTEGER NOT NULL DEFAULT 0,
+  lock_penalty_count INTEGER NOT NULL DEFAULT 0,
+  locked_login_attempt_count INTEGER NOT NULL DEFAULT 0,
   locked_until TEXT,
+  api_key_blocked_until TEXT,
+  api_key_block_attempt_count INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
