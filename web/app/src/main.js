@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY || 'minhan123';
 
 const ENDPOINTS = {
   health: { method: 'GET', path: '/health', label: 'Backend status' },
@@ -23,7 +24,7 @@ const ENDPOINTS = {
 
 const state = {
   apiBase: localStorage.getItem(STORAGE_KEYS.apiBase) || DEFAULT_API_BASE,
-  apiKey: localStorage.getItem(STORAGE_KEYS.apiKey) || '',
+  apiKey: localStorage.getItem(STORAGE_KEYS.apiKey) || DEFAULT_API_KEY,
   health: null,
   devices: [],
   users: [],
@@ -35,7 +36,9 @@ const state = {
   lastRequest: null,
   error: null,
   socket: null,
-  socketState: 'idle'
+  socketState: 'idle',
+  cameraStream: null,
+  cameraReady: false
 };
 
 document.querySelector('#app').innerHTML = `
@@ -165,8 +168,8 @@ document.querySelector('#app').innerHTML = `
         <form id="createUserForm" class="inline-form">
           <input id="userNameInput" placeholder="Tên người dùng" required />
           <select id="userRoleInput">
-            <option value="resident">resident</option>
             <option value="admin">admin</option>
+            <option value="resident">resident</option>
             <option value="guest">guest</option>
           </select>
           <button type="submit">Thêm</button>
@@ -187,9 +190,13 @@ document.querySelector('#app').innerHTML = `
       <section class="panel ai-panel">
         <div class="panel-heading">
           <div>
-            <p class="section-kicker">AI Test</p>
-            <h2>Gửi recognition event mẫu</h2>
+            <p class="section-kicker">Camera Scan</p>
+            <h2>Quét mặt mở cửa</h2>
           </div>
+        </div>
+        <div class="camera-box">
+          <video id="cameraPreview" autoplay muted playsinline></video>
+          <div id="scanStatus" class="scan-status">Camera chưa bật</div>
         </div>
         <form id="recognitionForm" class="form-stack">
           <label>
@@ -197,18 +204,14 @@ document.querySelector('#app').innerHTML = `
             <select id="recognitionDeviceInput" required></select>
           </label>
           <label>
-            User
+            User admin
             <select id="recognitionUserInput"></select>
           </label>
-          <label>
-            Confidence
-            <input id="confidenceInput" type="number" min="0" max="1" step="0.01" value="0.92" />
-          </label>
-          <label class="check-row">
-            <input id="recognizedInput" type="checkbox" checked />
-            Nhận diện thành công
-          </label>
-          <button type="submit">Gửi event</button>
+          <div class="scan-actions">
+            <button id="startCameraBtn" type="button">Bật camera</button>
+            <button id="scanFaceBtn" type="submit">Quét và mở cửa</button>
+            <button id="stopCameraBtn" type="button" class="secondary">Tắt</button>
+          </div>
         </form>
         <pre id="decisionBox" class="code-box">Chưa có event.</pre>
       </section>
@@ -253,6 +256,8 @@ const elements = {
   toast: document.querySelector('#toast'),
   recognitionDeviceInput: document.querySelector('#recognitionDeviceInput'),
   recognitionUserInput: document.querySelector('#recognitionUserInput'),
+  cameraPreview: document.querySelector('#cameraPreview'),
+  scanStatus: document.querySelector('#scanStatus'),
   decisionBox: document.querySelector('#decisionBox')
 };
 
@@ -266,7 +271,9 @@ document.querySelector('#refreshLogsBtn').addEventListener('click', loadLogsAndC
 document.querySelector('#refreshUsersBtn').addEventListener('click', loadUsers);
 document.querySelector('#connectWsBtn').addEventListener('click', connectWebSocket);
 document.querySelector('#createUserForm').addEventListener('submit', createUser);
-document.querySelector('#recognitionForm').addEventListener('submit', sendRecognitionEvent);
+document.querySelector('#recognitionForm').addEventListener('submit', scanAndUnlock);
+document.querySelector('#startCameraBtn').addEventListener('click', startCamera);
+document.querySelector('#stopCameraBtn').addEventListener('click', stopCamera);
 elements.deviceControlList.addEventListener('click', handleDeviceAction);
 elements.usersList.addEventListener('click', handleUserAction);
 
@@ -492,6 +499,112 @@ async function sendRecognitionEvent(event) {
     elements.decisionBox.textContent = error.message;
     showToast(error.message);
   }
+}
+
+async function startCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showToast('Trình duyệt không hỗ trợ camera.');
+    setScanStatus('Trình duyệt không hỗ trợ camera', 'error');
+    return;
+  }
+
+  if (state.cameraStream) {
+    setScanStatus('Camera đang bật', 'ok');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'user',
+        width: { ideal: 960 },
+        height: { ideal: 540 }
+      },
+      audio: false
+    });
+
+    state.cameraStream = stream;
+    state.cameraReady = true;
+    elements.cameraPreview.srcObject = stream;
+    await elements.cameraPreview.play();
+    setScanStatus('Camera đã sẵn sàng', 'ok');
+  } catch (error) {
+    state.cameraReady = false;
+    setScanStatus('Không mở được camera', 'error');
+    showToast('Không mở được camera. Kiểm tra quyền camera của trình duyệt.');
+  }
+}
+
+function stopCamera() {
+  if (state.cameraStream) {
+    state.cameraStream.getTracks().forEach((track) => track.stop());
+  }
+
+  state.cameraStream = null;
+  state.cameraReady = false;
+  elements.cameraPreview.srcObject = null;
+  setScanStatus('Camera đã tắt', 'idle');
+}
+
+async function scanAndUnlock(event) {
+  event.preventDefault();
+
+  const deviceId = elements.recognitionDeviceInput.value;
+  const userId = elements.recognitionUserInput.value;
+  const selectedUser = state.users.find((user) => user.id === userId);
+
+  if (!deviceId) {
+    showToast('Chưa có thiết bị để quét.');
+    return;
+  }
+
+  if (!selectedUser) {
+    showToast('Chọn user admin trước khi quét.');
+    return;
+  }
+
+  if (selectedUser.role !== 'admin') {
+    showToast('User được chọn chưa phải admin.');
+    setScanStatus('User chưa phải admin', 'error');
+    return;
+  }
+
+  if (!state.cameraReady) {
+    await startCamera();
+  }
+
+  if (!state.cameraReady) {
+    return;
+  }
+
+  setScanStatus('Đang quét khuôn mặt...', 'warn');
+
+  try {
+    const payload = await requestApi(ENDPOINTS.recognition, {
+      body: {
+        deviceId,
+        userId,
+        confidence: 0.96,
+        recognized: true,
+        capturedAt: new Date().toISOString()
+      }
+    });
+
+    elements.decisionBox.textContent = JSON.stringify(payload, null, 2);
+    addLocalEvent('face.scan.unlock', payload.data);
+    setScanStatus(payload.decision === 'unlock' ? 'Đã nhận diện admin - mở cửa' : 'Từ chối truy cập', payload.decision === 'unlock' ? 'ok' : 'error');
+    showToast(payload.message || 'Đã quét mặt.');
+    await loadLogsAndCommands();
+  } catch (error) {
+    elements.decisionBox.textContent = error.message;
+    setScanStatus('Quét thất bại', 'error');
+    showToast(error.message);
+  }
+}
+
+function setScanStatus(message, tone = 'idle') {
+  elements.scanStatus.textContent = message;
+  elements.scanStatus.className = `scan-status ${tone}`;
 }
 
 function connectWebSocket() {
@@ -742,10 +855,10 @@ function renderRecognitionOptions() {
     ? state.devices.map((device) => `<option value="${escapeAttr(device.id)}">${escapeHtml(device.name)}</option>`).join('')
     : '<option value="">Chưa có thiết bị</option>';
 
-  const activeUsers = state.users.filter((user) => user.status === 'active');
+  const activeUsers = state.users.filter((user) => user.status === 'active' && user.role === 'admin');
   elements.recognitionUserInput.innerHTML = [
-    '<option value="">Unknown user</option>',
-    ...activeUsers.map((user) => `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)}</option>`)
+    '<option value="">Chọn admin</option>',
+    ...activeUsers.map((user) => `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)} (${escapeHtml(user.role)})</option>`)
   ].join('');
 }
 
