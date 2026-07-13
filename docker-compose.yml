@@ -1,0 +1,51 @@
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: face-door-lock-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt-data:/mosquitto/data
+      - mqtt-log:/mosquitto/log
+
+  backend:
+    build:
+      context: ./backend
+    image: face-door-lock-backend
+    container_name: face-door-lock-backend
+    restart: unless-stopped
+    depends_on:
+      - mqtt
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_PATH: /app/database/door-lock.sqlite
+      API_KEY: ${API_KEY:-minhan123}
+      MQTT_URL: mqtt://mqtt:1883
+      MQTT_CLIENT_ID: door-lock-api
+      MQTT_COMMAND_TOPIC_PREFIX: doorlock/device
+      MQTT_STATUS_TOPIC: doorlock/device/+/status
+      WS_PATH: /ws
+      WS_HEARTBEAT_MS: 30000
+    volumes:
+      - backend-data:/app/database
+
+  web:
+    build:
+      context: ./web/app
+    image: face-door-lock-web
+    container_name: face-door-lock-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  backend-data:
+  mqtt-data:
+  mqtt-log:

@@ -182,7 +182,84 @@ Mở trình duyệt:
 http://localhost:8080
 ```
 
-### 6. Lệnh Docker Hữu Ích
+### 6. Chạy Chung Backend + Web + MQTT Bằng Docker Compose
+
+Từ thư mục root của project:
+
+```bash
+cd /Users/hoangminhan/face-recognition-door-lock
+docker compose up --build
+```
+
+Sau khi chạy xong:
+
+```text
+Web dashboard: http://localhost:8080
+Backend API:   http://localhost:3000
+MQTT broker:   localhost:1883
+API key:       minhan123
+```
+
+Kiểm tra backend:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+Kiểm tra API riêng tư:
+
+```bash
+curl http://localhost:3000/api/devices \
+  -H "X-API-Key: minhan123"
+```
+
+Chạy ở chế độ nền:
+
+```bash
+docker compose up -d --build
+```
+
+Xem log toàn hệ thống:
+
+```bash
+docker compose logs -f
+```
+
+Xem log từng service:
+
+```bash
+docker compose logs -f backend
+docker compose logs -f web
+docker compose logs -f mqtt
+```
+
+Dừng toàn bộ:
+
+```bash
+docker compose down
+```
+
+Dừng và xóa cả volume database/MQTT local:
+
+```bash
+docker compose down -v
+```
+
+Đổi API key khi chạy:
+
+```bash
+API_KEY=my-secret-key docker compose up -d --build
+```
+
+Trong Docker Compose, backend kết nối MQTT bằng:
+
+```text
+mqtt://mqtt:1883
+```
+
+Vì `mqtt` là tên service broker trong mạng Docker Compose.
+
+### 7. Lệnh Docker Hữu Ích
 
 Xem container đang chạy:
 
@@ -201,8 +278,6 @@ Xem log container:
 ```bash
 docker logs <container_id>
 ```
-
-Lưu ý: hiện project đã có Dockerfile cho `backend` và `web/app`, nhưng chưa có `docker-compose.yml`. Docker Compose có thể được thêm sau để chạy backend, web, MQTT broker và database bằng một lệnh.
 
 ## Hướng phát triển
 
