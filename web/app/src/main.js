@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   selectedScanUserId: 'doorLockDashboard.selectedScanUserId',
   sessionToken: 'doorLockDashboard.sessionToken',
   account: 'doorLockDashboard.account',
+  verifiedApiKey: 'doorLockDashboard.verifiedApiKey',
   apiKeyBlocks: 'doorLockDashboard.apiKeyBlocks'
 };
 
@@ -367,7 +368,7 @@ async function bootAuth() {
       showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi tải dữ liệu.');
       return;
     }
-    await refreshAll();
+    await refreshAfterAuth();
   } catch (error) {
     clearSession();
     renderAuthState();
@@ -427,7 +428,7 @@ async function handleAuthSubmit(event) {
       showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi tải dữ liệu.');
       return;
     }
-    await refreshAll();
+    await refreshAfterAuth();
   } catch (error) {
     showAuthError(error);
   }
@@ -494,12 +495,20 @@ async function refreshAll() {
     return;
   }
 
+  if (!state.apiKey) {
+    state.error = 'Cần nhập mã truy cập để tải dữ liệu.';
+    renderRuntimeStatus();
+    showToast('Nhập mã truy cập rồi bấm Lưu cấu hình.');
+    return;
+  }
+
   setLoading(true);
   state.error = null;
 
   try {
     await loadHealth();
     await Promise.all([loadDevices(), loadUsers(), loadLogsAndCommands()]);
+    markApiKeyVerified();
     connectWebSocket();
     showToast('Đã tải dữ liệu.');
   } catch (error) {
@@ -600,6 +609,16 @@ function saveConfig() {
   const apiBase = normalizeApiBase(elements.apiBaseInput.value || DEFAULT_API_BASE);
   const apiKey = elements.apiKeyInput.value.trim();
 
+  if (!apiKey) {
+    state.apiBase = apiBase;
+    state.apiKey = '';
+    localStorage.setItem(STORAGE_KEYS.apiBase, apiBase);
+    localStorage.removeItem(STORAGE_KEYS.apiKey);
+    localStorage.removeItem(STORAGE_KEYS.verifiedApiKey);
+    showToast('Nhập mã truy cập trước khi lưu cấu hình.');
+    return;
+  }
+
   state.apiBase = apiBase;
   state.apiKey = apiKey;
   localStorage.setItem(STORAGE_KEYS.apiBase, apiBase);
@@ -616,11 +635,43 @@ function saveConfig() {
 function handleSecurityError(error) {
   if (error.errorCode === 'API_KEY_BLOCKED') {
     startApiKeyBlock(error.remainingMs || 5 * 60 * 1000);
+    clearSavedApiKey();
     return;
   }
 
   if (error.errorCode === 'API_KEY_SPAM_LOGOUT') {
     forceLocalLogout('Bạn đã bị đăng xuất vì thao tác mã truy cập khi đang bị chặn.');
+  }
+}
+
+function clearSavedApiKey() {
+  state.apiKey = '';
+  elements.apiKeyInput.value = '';
+  localStorage.removeItem(STORAGE_KEYS.apiKey);
+  localStorage.removeItem(STORAGE_KEYS.verifiedApiKey);
+}
+
+async function refreshAfterAuth() {
+  if (!state.apiKey) {
+    showToast('Nhập mã truy cập rồi bấm Lưu cấu hình.');
+    return;
+  }
+
+  if (!isApiKeyTrustedForAutoLoad()) {
+    showToast('Mã truy cập chưa được xác nhận. Bấm Lưu cấu hình để tải dữ liệu.');
+    return;
+  }
+
+  await refreshAll();
+}
+
+function isApiKeyTrustedForAutoLoad() {
+  return state.apiKey === DEFAULT_API_KEY || localStorage.getItem(STORAGE_KEYS.verifiedApiKey) === state.apiKey;
+}
+
+function markApiKeyVerified() {
+  if (state.apiKey) {
+    localStorage.setItem(STORAGE_KEYS.verifiedApiKey, state.apiKey);
   }
 }
 
