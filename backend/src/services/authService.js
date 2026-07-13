@@ -303,6 +303,16 @@ async function blockApiKeyBySessionToken(token) {
   };
 }
 
+async function clearApiKeyBlockBySessionToken(token) {
+  const account = await getAccountRowBySessionToken(token);
+  if (!account) {
+    return null;
+  }
+
+  await clearApiKeyBlock(account.id);
+  return account;
+}
+
 async function forceLogoutForApiKeySpam(token) {
   const account = await getAccountRowBySessionToken(token);
   if (!account) {
@@ -324,6 +334,7 @@ async function clearApiKeyBlock(accountId) {
 
 module.exports = {
   blockApiKeyBySessionToken,
+  clearApiKeyBlockBySessionToken,
   forceLogoutForApiKeySpam,
   getAccountBySessionToken,
   getApiKeyBlockBySessionToken,

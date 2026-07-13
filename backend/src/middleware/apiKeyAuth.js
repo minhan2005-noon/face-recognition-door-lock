@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { getSessionToken } = require('./sessionAuth');
 const {
   blockApiKeyBySessionToken,
+  clearApiKeyBlockBySessionToken,
   forceLogoutForApiKeySpam,
   getApiKeyBlockBySessionToken
 } = require('../services/authService');
@@ -21,9 +22,17 @@ async function apiKeyAuth(req, res, next) {
 
   try {
     const sessionToken = getSessionToken(req);
+    const providedKey = getProvidedApiKey(req);
+    const hasValidApiKey = isValidApiKey(providedKey);
     const blockInfo = await getApiKeyBlockBySessionToken(sessionToken);
 
     if (blockInfo.blocked) {
+      if (hasValidApiKey) {
+        await clearApiKeyBlockBySessionToken(sessionToken);
+        next();
+        return;
+      }
+
       await forceLogoutForApiKeySpam(sessionToken);
       res.status(440).json({
         success: false,
@@ -34,9 +43,7 @@ async function apiKeyAuth(req, res, next) {
       return;
     }
 
-    const providedKey = getProvidedApiKey(req);
-
-    if (!isValidApiKey(providedKey)) {
+    if (!hasValidApiKey) {
       const result = await blockApiKeyBySessionToken(sessionToken);
       res.status(423).json({
         success: false,
