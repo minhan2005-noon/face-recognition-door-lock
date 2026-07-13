@@ -3,7 +3,9 @@ import './styles.css';
 const STORAGE_KEYS = {
   apiBase: 'doorLockDashboard.apiBase',
   apiKey: 'doorLockDashboard.apiKey',
-  faceProfiles: 'doorLockDashboard.faceProfiles'
+  faceProfiles: 'doorLockDashboard.faceProfiles',
+  selectedDeviceId: 'doorLockDashboard.selectedDeviceId',
+  selectedScanUserId: 'doorLockDashboard.selectedScanUserId'
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -34,7 +36,8 @@ const state = {
   logs: [],
   commands: [],
   events: [],
-  selectedDeviceId: 'door_lock_001',
+  selectedDeviceId: localStorage.getItem(STORAGE_KEYS.selectedDeviceId) || 'door_lock_001',
+  selectedScanUserId: localStorage.getItem(STORAGE_KEYS.selectedScanUserId) || '',
   loading: false,
   lastRequest: null,
   error: null,
@@ -273,6 +276,8 @@ document.querySelector('#recognitionForm').addEventListener('submit', scanAndUnl
 document.querySelector('#startCameraBtn').addEventListener('click', startCamera);
 document.querySelector('#enrollFaceBtn').addEventListener('click', enrollSelectedAdminFace);
 document.querySelector('#stopCameraBtn').addEventListener('click', stopCamera);
+elements.recognitionDeviceInput.addEventListener('change', handleScanDeviceChange);
+elements.recognitionUserInput.addEventListener('change', handleScanUserChange);
 elements.deviceControlList.addEventListener('click', handleDeviceAction);
 elements.usersList.addEventListener('click', handleUserAction);
 
@@ -307,6 +312,7 @@ async function loadDevices() {
   state.devices = payload.data || [];
   if (!state.devices.some((device) => device.id === state.selectedDeviceId)) {
     state.selectedDeviceId = state.devices[0]?.id || '';
+    localStorage.setItem(STORAGE_KEYS.selectedDeviceId, state.selectedDeviceId);
   }
   renderAll();
 }
@@ -381,6 +387,16 @@ function saveConfig() {
 
   showToast('Đã lưu cấu hình.');
   refreshAll();
+}
+
+function handleScanDeviceChange() {
+  state.selectedDeviceId = elements.recognitionDeviceInput.value;
+  localStorage.setItem(STORAGE_KEYS.selectedDeviceId, state.selectedDeviceId);
+}
+
+function handleScanUserChange() {
+  state.selectedScanUserId = elements.recognitionUserInput.value;
+  localStorage.setItem(STORAGE_KEYS.selectedScanUserId, state.selectedScanUserId);
 }
 
 async function clearAccessHistory() {
@@ -586,6 +602,10 @@ async function scanAndUnlock(event) {
 
   const deviceId = elements.recognitionDeviceInput.value;
   const userId = elements.recognitionUserInput.value;
+  state.selectedDeviceId = deviceId;
+  state.selectedScanUserId = userId;
+  localStorage.setItem(STORAGE_KEYS.selectedDeviceId, deviceId);
+  localStorage.setItem(STORAGE_KEYS.selectedScanUserId, userId);
   const selectedUser = state.users.find((user) => user.id === userId);
 
   if (!deviceId) {
@@ -660,6 +680,8 @@ function setScanStatus(message, tone = 'idle') {
 
 async function enrollSelectedAdminFace() {
   const userId = elements.recognitionUserInput.value;
+  state.selectedScanUserId = userId;
+  localStorage.setItem(STORAGE_KEYS.selectedScanUserId, userId);
   const selectedUser = state.users.find((user) => user.id === userId);
 
   if (!selectedUser) {
@@ -1002,6 +1024,9 @@ function renderRecognitionOptions() {
   elements.recognitionDeviceInput.innerHTML = state.devices.length
     ? state.devices.map((device) => `<option value="${escapeAttr(device.id)}">${escapeHtml(device.name)}</option>`).join('')
     : '<option value="">Chưa có thiết bị</option>';
+  elements.recognitionDeviceInput.value = state.devices.some((device) => device.id === state.selectedDeviceId)
+    ? state.selectedDeviceId
+    : state.devices[0]?.id || '';
 
   const activeUsers = state.users.filter((user) => user.status === 'active');
   elements.recognitionUserInput.innerHTML = [
@@ -1011,6 +1036,9 @@ function renderRecognitionOptions() {
       return `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)} (${escapeHtml(formatRole(user.role))}${profile})</option>`;
     })
   ].join('');
+  elements.recognitionUserInput.value = activeUsers.some((user) => user.id === state.selectedScanUserId)
+    ? state.selectedScanUserId
+    : '';
 }
 
 function renderLastRequest() {
