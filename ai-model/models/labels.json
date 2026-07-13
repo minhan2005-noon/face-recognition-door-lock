@@ -1,1 +1,11 @@
-
+{
+  "modelFile": "face_embeddings.npz",
+  "embeddingCount": 20,
+  "users": [
+    "minhan"
+  ],
+  "samplesPerUser": {
+    "minhan": 20
+  },
+  "skipped": []
+}
