@@ -115,8 +115,10 @@ p {
 }
 
 h1 {
-  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  font-size: clamp(2rem, 5vw, 4.1rem);
+  line-height: 0.98;
   letter-spacing: 0;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
 }
 
 h2 {
@@ -130,21 +132,30 @@ code,
 }
 
 .app-header {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 22px;
-  padding: 24px clamp(16px, 4vw, 44px);
+  min-height: 260px;
+  padding: 30px clamp(16px, 4vw, 44px);
   background:
-    linear-gradient(135deg, #10202b 0%, #0b3d43 54%, #114f47 100%);
+    linear-gradient(90deg, rgba(8, 22, 32, 0.94) 0%, rgba(8, 34, 42, 0.78) 43%, rgba(8, 34, 42, 0.34) 100%),
+    url("/assets/cyber-door-hero.png") center / cover no-repeat,
+    #10202b;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
   box-shadow: 0 18px 0 rgba(16, 32, 43, 0.04), 0 22px 42px rgba(16, 32, 43, 0.18);
 }
 
 .brand-block {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 5px;
+  gap: 8px;
+  max-width: 560px;
+  padding: 18px 0;
 }
 
 .eyebrow,
@@ -160,11 +171,43 @@ code,
   color: #6ee7c8;
 }
 
+.hero-copy {
+  max-width: 440px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.hero-chips span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(110, 231, 200, 0.34);
+  border-radius: 999px;
+  background: rgba(9, 43, 51, 0.58);
+  color: #dff8ef;
+  font-size: 0.78rem;
+  font-weight: 820;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 -2px 0 rgba(110, 231, 200, 0.12), 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
 .runtime-strip {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+  max-width: 420px;
 }
 
 .status-pill,
@@ -185,6 +228,19 @@ code,
   font-size: 0.86rem;
   font-weight: 720;
   box-shadow: inset 0 -2px 0 rgba(23, 32, 45, 0.04);
+  backdrop-filter: blur(12px);
+}
+
+.app-header .status-pill {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(8, 28, 36, 0.56);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.app-header .status-pill.ok {
+  border-color: rgba(110, 231, 200, 0.4);
+  background: rgba(20, 115, 79, 0.24);
+  color: #b9f7df;
 }
 
 .mini-pill {
@@ -221,6 +277,9 @@ code,
 }
 
 .toolbar {
+  position: relative;
+  z-index: 2;
+  margin-top: -34px;
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr) auto;
   align-items: center;
@@ -284,6 +343,20 @@ code,
 .panel:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lift);
+}
+
+.ai-panel {
+  border-color: rgba(47, 111, 237, 0.26);
+  background:
+    radial-gradient(circle at 88% 10%, rgba(244, 183, 64, 0.16), transparent 26%),
+    linear-gradient(145deg, #ffffff, #eef8fb);
+}
+
+.realtime-panel {
+  border-color: rgba(12, 107, 100, 0.24);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(110, 231, 200, 0.2), transparent 26%),
+    linear-gradient(145deg, #ffffff, #f3fbf9);
 }
 
 .metric {
@@ -578,6 +651,16 @@ tr:last-child td {
   box-shadow: 0 8px 0 rgba(16, 32, 43, 0.035), 0 16px 26px rgba(23, 32, 45, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
+.event-item.success {
+  border-color: rgba(20, 115, 79, 0.22);
+  background: linear-gradient(145deg, #ffffff, #effaf5);
+}
+
+.event-item.danger {
+  border-color: rgba(180, 35, 24, 0.22);
+  background: linear-gradient(145deg, #ffffff, #fff4ed);
+}
+
 .event-icon {
   display: grid;
   place-items: center;
@@ -652,6 +735,18 @@ tr:last-child td {
     linear-gradient(135deg, rgba(110, 231, 200, 0.16), rgba(47, 111, 237, 0.16)),
     #0f1720;
   box-shadow: 0 10px 0 rgba(16, 32, 43, 0.06), 0 20px 34px rgba(16, 32, 43, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.camera-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(110, 231, 200, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110, 231, 200, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mix-blend-mode: screen;
 }
 
 .camera-box video {
@@ -791,6 +886,9 @@ tr:last-child td {
 
   .app-header {
     align-items: flex-start;
+    min-height: 390px;
+    flex-direction: column;
+    background-position: 58% center;
   }
 
   .runtime-strip {
