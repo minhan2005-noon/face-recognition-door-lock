@@ -2,7 +2,8 @@ import './styles.css';
 
 const STORAGE_KEYS = {
   apiBase: 'doorLockDashboard.apiBase',
-  apiKey: 'doorLockDashboard.apiKey'
+  apiKey: 'doorLockDashboard.apiKey',
+  faceProfiles: 'doorLockDashboard.faceProfiles'
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -14,6 +15,7 @@ const ENDPOINTS = {
   updateDevice: { method: 'PATCH', path: '/devices/:id/status', label: 'Update device status' },
   users: { method: 'GET', path: '/users', label: 'Users' },
   createUser: { method: 'POST', path: '/users', label: 'Create user' },
+  updateUser: { method: 'PATCH', path: '/users/:id', label: 'Update user' },
   disableUser: { method: 'DELETE', path: '/users/:id', label: 'Disable user' },
   logs: { method: 'GET', path: '/access-logs', label: 'Latest/history' },
   commands: { method: 'GET', path: '/lock/commands', label: 'Command history' },
@@ -38,14 +40,15 @@ const state = {
   socket: null,
   socketState: 'idle',
   cameraStream: null,
-  cameraReady: false
+  cameraReady: false,
+  faceProfiles: loadStoredFaceProfiles()
 };
 
 document.querySelector('#app').innerHTML = `
   <header class="app-header">
     <div class="brand-block">
       <p class="eyebrow">Khóa cửa nhận diện khuôn mặt</p>
-      <h1>Bảng điều khiển vận hành</h1>
+      <h1>Face Door Access</h1>
     </div>
     <div class="runtime-strip">
       <div class="status-pill" id="apiStatus">API chưa kiểm tra</div>
@@ -191,7 +194,7 @@ document.querySelector('#app').innerHTML = `
         <div class="panel-heading">
           <div>
             <p class="section-kicker">Camera Scan</p>
-            <h2>Quét mặt mở cửa</h2>
+            <h2>Quét mặt admin để mở cửa</h2>
           </div>
         </div>
         <div class="camera-box">
@@ -204,11 +207,12 @@ document.querySelector('#app').innerHTML = `
             <select id="recognitionDeviceInput" required></select>
           </label>
           <label>
-            User admin
+            Người quét
             <select id="recognitionUserInput"></select>
           </label>
           <div class="scan-actions">
             <button id="startCameraBtn" type="button">Bật camera</button>
+            <button id="enrollFaceBtn" type="button" class="secondary">Lưu mặt admin</button>
             <button id="scanFaceBtn" type="submit">Quét và mở cửa</button>
             <button id="stopCameraBtn" type="button" class="secondary">Tắt</button>
           </div>
@@ -273,6 +277,7 @@ document.querySelector('#connectWsBtn').addEventListener('click', connectWebSock
 document.querySelector('#createUserForm').addEventListener('submit', createUser);
 document.querySelector('#recognitionForm').addEventListener('submit', scanAndUnlock);
 document.querySelector('#startCameraBtn').addEventListener('click', startCamera);
+document.querySelector('#enrollFaceBtn').addEventListener('click', enrollSelectedAdminFace);
 document.querySelector('#stopCameraBtn').addEventListener('click', stopCamera);
 elements.deviceControlList.addEventListener('click', handleDeviceAction);
 elements.usersList.addEventListener('click', handleUserAction);
@@ -429,8 +434,25 @@ async function handleUserAction(event) {
   if (!button) return;
 
   const userId = button.dataset.userId;
+  const action = button.dataset.userAction;
+  const user = state.users.find((item) => item.id === userId);
 
   try {
+    if (action === 'make-admin' || action === 'make-guest') {
+      const role = action === 'make-admin' ? 'admin' : 'guest';
+      await requestApi(ENDPOINTS.updateUser, {
+        params: { id: userId },
+        body: {
+          name: user?.name,
+          role,
+          status: user?.status || 'active'
+        }
+      });
+      showToast(role === 'admin' ? 'Đã cấp quyền admin.' : 'Đã chuyển user về guest.');
+      await loadUsers();
+      return;
+    }
+
     await requestApi(ENDPOINTS.disableUser, {
       params: { id: userId }
     });
@@ -564,8 +586,7 @@ async function scanAndUnlock(event) {
   }
 
   if (selectedUser.role !== 'admin') {
-    showToast('User được chọn chưa phải admin.');
-    setScanStatus('User chưa phải admin', 'error');
+    await sendDeniedRecognition(deviceId, userId, 'User chưa phải admin');
     return;
   }
 
@@ -577,14 +598,29 @@ async function scanAndUnlock(event) {
     return;
   }
 
-  setScanStatus('Đang quét khuôn mặt...', 'warn');
+  const storedProfile = state.faceProfiles[userId];
+  if (!storedProfile) {
+    setScanStatus('Admin này chưa lưu mặt', 'error');
+    showToast('Bấm Lưu mặt admin trước khi quét mở cửa.');
+    return;
+  }
+
+  setScanStatus('Đang so khớp khuôn mặt...', 'warn');
 
   try {
+    const currentSignature = captureFaceSignature();
+    const match = compareFaceSignatures(storedProfile.signature, currentSignature);
+
+    if (!match.allowed) {
+      await sendDeniedRecognition(deviceId, userId, `Mặt không khớp (${Math.round(match.score * 100)}%)`);
+      return;
+    }
+
     const payload = await requestApi(ENDPOINTS.recognition, {
       body: {
         deviceId,
         userId,
-        confidence: 0.96,
+        confidence: match.score,
         recognized: true,
         capturedAt: new Date().toISOString()
       }
@@ -605,6 +641,97 @@ async function scanAndUnlock(event) {
 function setScanStatus(message, tone = 'idle') {
   elements.scanStatus.textContent = message;
   elements.scanStatus.className = `scan-status ${tone}`;
+}
+
+async function enrollSelectedAdminFace() {
+  const userId = elements.recognitionUserInput.value;
+  const selectedUser = state.users.find((user) => user.id === userId);
+
+  if (!selectedUser) {
+    showToast('Chọn user admin trước.');
+    return;
+  }
+
+  if (selectedUser.role !== 'admin') {
+    setScanStatus('Chỉ admin mới được lưu mặt', 'error');
+    showToast('Đổi user này sang admin trước khi lưu mặt.');
+    return;
+  }
+
+  if (!state.cameraReady) {
+    await startCamera();
+  }
+
+  if (!state.cameraReady) {
+    return;
+  }
+
+  const signature = captureFaceSignature();
+  state.faceProfiles[userId] = {
+    userId,
+    name: selectedUser.name,
+    signature,
+    createdAt: new Date().toISOString()
+  };
+  persistFaceProfiles();
+  renderRecognitionOptions();
+  setScanStatus(`Đã lưu mặt admin: ${selectedUser.name}`, 'ok');
+  showToast('Đã lưu mặt admin trên trình duyệt này.');
+}
+
+async function sendDeniedRecognition(deviceId, userId, reason) {
+  try {
+    const payload = await requestApi(ENDPOINTS.recognition, {
+      body: {
+        deviceId,
+        userId: userId || null,
+        confidence: 0,
+        recognized: false,
+        capturedAt: new Date().toISOString()
+      }
+    });
+    elements.decisionBox.textContent = JSON.stringify({ ...payload, reason }, null, 2);
+    addLocalEvent('face.scan.denied', { reason, data: payload.data });
+    setScanStatus(reason, 'error');
+    showToast('Không mở cửa: ' + reason);
+    await loadLogsAndCommands();
+  } catch (error) {
+    elements.decisionBox.textContent = error.message;
+    setScanStatus('Từ chối nhưng ghi log thất bại', 'error');
+    showToast(error.message);
+  }
+}
+
+function captureFaceSignature() {
+  const video = elements.cameraPreview;
+  const canvas = document.createElement('canvas');
+  const size = 16;
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(video, 0, 0, size, size);
+  const { data } = context.getImageData(0, 0, size, size);
+  const signature = [];
+
+  for (let index = 0; index < data.length; index += 4) {
+    signature.push(Number(((data[index] + data[index + 1] + data[index + 2]) / 765).toFixed(4)));
+  }
+
+  return signature;
+}
+
+function compareFaceSignatures(reference = [], current = []) {
+  if (!reference.length || reference.length !== current.length) {
+    return { allowed: false, score: 0 };
+  }
+
+  const difference = reference.reduce((total, value, index) => total + Math.abs(value - current[index]), 0) / reference.length;
+  const score = Math.max(0, Math.min(1, 1 - difference * 2.2));
+
+  return {
+    allowed: score >= 0.72,
+    score: Number(score.toFixed(2))
+  };
 }
 
 function connectWebSocket() {
@@ -784,14 +911,18 @@ function renderUsers() {
   elements.usersList.innerHTML = state.users
     .slice(0, 8)
     .map(
-      (user) => `
+      (user) => {
+        const hasFaceProfile = Boolean(state.faceProfiles[user.id]);
+
+        return `
         <article class="row-item">
           <div>
             <strong>${escapeHtml(user.name)}</strong>
-            <span class="meta">${escapeHtml(user.role)} - <span class="mono">${escapeHtml(user.id)}</span></span>
+            <span class="meta">${escapeHtml(user.role)} - ${hasFaceProfile ? 'đã lưu mặt' : 'chưa lưu mặt'} - <span class="mono">${escapeHtml(user.id)}</span></span>
           </div>
           <div class="row-actions">
             <span class="mini-pill ${user.status === 'active' ? 'ok' : 'idle'}">${escapeHtml(user.status)}</span>
+            <button type="button" data-user-action="${user.role === 'admin' ? 'make-guest' : 'make-admin'}" data-user-id="${escapeAttr(user.id)}" class="secondary small">${user.role === 'admin' ? 'Guest' : 'Admin'}</button>
             ${
               user.status === 'active'
                 ? `<button type="button" data-user-action="disable" data-user-id="${escapeAttr(user.id)}" class="secondary small">Disable</button>`
@@ -799,7 +930,8 @@ function renderUsers() {
             }
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join('');
 }
@@ -855,10 +987,13 @@ function renderRecognitionOptions() {
     ? state.devices.map((device) => `<option value="${escapeAttr(device.id)}">${escapeHtml(device.name)}</option>`).join('')
     : '<option value="">Chưa có thiết bị</option>';
 
-  const activeUsers = state.users.filter((user) => user.status === 'active' && user.role === 'admin');
+  const activeUsers = state.users.filter((user) => user.status === 'active');
   elements.recognitionUserInput.innerHTML = [
-    '<option value="">Chọn admin</option>',
-    ...activeUsers.map((user) => `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)} (${escapeHtml(user.role)})</option>`)
+    '<option value="">Chọn user</option>',
+    ...activeUsers.map((user) => {
+      const profile = state.faceProfiles[user.id] ? ' / đã lưu mặt' : '';
+      return `<option value="${escapeAttr(user.id)}">${escapeHtml(user.name)} (${escapeHtml(user.role)}${profile})</option>`;
+    })
   ].join('');
 }
 
@@ -999,6 +1134,18 @@ function showToast(message) {
   showToast.timeoutId = window.setTimeout(() => {
     elements.toast.hidden = true;
   }, 2800);
+}
+
+function loadStoredFaceProfiles() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.faceProfiles) || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+
+function persistFaceProfiles() {
+  localStorage.setItem(STORAGE_KEYS.faceProfiles, JSON.stringify(state.faceProfiles));
 }
 
 function emptyState(message) {
