@@ -184,28 +184,6 @@ code,
   line-height: 1.5;
 }
 
-.hero-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.hero-chips span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 11px;
-  border: 1px solid rgba(110, 231, 200, 0.34);
-  border-radius: 999px;
-  background: rgba(9, 43, 51, 0.58);
-  color: #dff8ef;
-  font-size: 0.78rem;
-  font-weight: 820;
-  backdrop-filter: blur(10px);
-  box-shadow: inset 0 -2px 0 rgba(110, 231, 200, 0.12), 0 10px 22px rgba(0, 0, 0, 0.18);
-}
-
 .runtime-strip {
   position: relative;
   z-index: 1;

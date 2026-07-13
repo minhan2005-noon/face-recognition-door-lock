@@ -63,11 +63,6 @@ document.querySelector('#app').innerHTML = `
       <p class="eyebrow">Khóa cửa nhận diện khuôn mặt</p>
       <h1>Face Door Access</h1>
       <p class="hero-copy">Cửa thông minh, quét mặt admin, mở khóa trong một nhịp chạm.</p>
-      <div class="hero-chips">
-        <span>Cyber mode</span>
-        <span>Camera ready</span>
-        <span>No pink</span>
-      </div>
     </div>
     <div class="runtime-strip">
       <div class="status-pill" id="apiStatus">Hệ thống chưa kiểm tra</div>
