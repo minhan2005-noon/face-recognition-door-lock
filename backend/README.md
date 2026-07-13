@@ -265,9 +265,3 @@ curl -X POST http://localhost:3000/api/recognition-events \
   -H "X-API-Key: dev-secret-key" \
   -d '{"deviceId":"door_lock_001","recognized":true,"userId":"USER_ID","confidence":0.92}'
 ```
-
-
-
-```bảo mật
-  xong phần KEY-API,
-```

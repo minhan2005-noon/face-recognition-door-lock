@@ -1,0 +1,180 @@
+{"kind":"deck","id":"pr/v358sq","name":"Deck"}
+{"kind":"layout","layoutId":"016656fe-b762-4228-878f-3df55ab14600","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"bf72781d-d3dc-4f50-a524-28090eb20390","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/j5rzer","slide":1,"title":"Thứ tự triển khai dự án","textShapes":6}
+{"kind":"textbox","id":"sh/knih4byh","slide":1,"text":"Thứ tự triển khai dự án","textPreview":"Thứ tự triển khai dự án","textChars":23,"textLines":1,"bbox":[78,112,780,74]}
+{"kind":"textbox","id":"sh/v6psfil0","slide":1,"text":"Khóa cửa nhận diện khuôn mặt","textPreview":"Khóa cửa nhận diện khuôn mặt","textChars":28,"textLines":1,"bbox":[82,206,620,42]}
+{"kind":"textbox","id":"sh/2lszqtcj","slide":1,"text":"Làm nền tảng trước, test từng phần riêng lẻ, rồi mới ghép phần cứng thật để giảm rủi ro.","textPreview":"Làm nền tảng trước, test từng phần riêng lẻ, rồi mới ghép phần cứng thật để giảm rủi ro.","textChars":88,"textLines":1,"bbox":[82,308,720,96]}
+{"kind":"shape","id":"sh/d0z61032","slide":1,"bbox":[842,104,292,430]}
+{"kind":"textbox","id":"sh/kf6dcbul","slide":1,"text":"Nguyên tắc chính","textPreview":"Nguyên tắc chính","textChars":16,"textLines":1,"bbox":[876,146,220,34]}
+{"kind":"textbox","id":"sh/vu9knih4","slide":1,"text":"• Chốt API trước khi ghép hệ thống\n• Demo bằng mô phỏng trước\n• Mỗi nhánh chỉ sửa đúng phạm vi\n• Ghép từng bước, không ghép một lần","textPreview":"• Chốt API trước khi ghép hệ thống | • Demo bằng mô phỏng trước | • Mỗi nhánh chỉ sửa đúng phạm vi | • Ghép từng bước, không ghép một lần","textChars":131,"textLines":4,"bbox":[876,204,224,220]}
+{"kind":"textbox","id":"sh/29gr2p8n","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/j5rzer","slide":1,"text":""}
+{"kind":"slide","id":"sl/2lljie","slide":2,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":13}
+{"kind":"textbox","id":"sh/4byhgn29","slide":2,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/bq1oryts","slide":2,"text":"Backend/API là điểm xuất phát hợp lý nhất","textPreview":"Backend/API là điểm xuất phát hợp lý nhất","textChars":41,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/m58z25kb","slide":2,"bbox":[72,150,1136,2]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":2,"text":"Backend là hợp đồng chung giữa AI, firmware và dashboard. Khi API rõ, các nhóm có thể làm song song mà không chờ nhau.","textPreview":"Backend là hợp đồng chung giữa AI, firmware và dashboard. Khi API rõ, các nhóm có thể làm song song mà không chờ nhau.","textChars":118,"textLines":1,"bbox":[76,184,1050,60]}
+{"kind":"shape","id":"sh/4nap4r65","slide":2,"bbox":[80,306,240,178]}
+{"kind":"shape","id":"sh/b2hwfyxo","slide":2,"bbox":[104,332,120,34]}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":2,"text":"AI","textPreview":"AI","textChars":2,"textLines":1,"bbox":[114,339,100,20]}
+{"kind":"textbox","id":"sh/tgfmlkjm","slide":2,"text":"Gửi kết quả nhận diện","textPreview":"Gửi kết quả nhận diện","textChars":21,"textLines":1,"bbox":[104,388,190,58]}
+{"kind":"shape","id":"sh/4vmtwra5","slide":2,"bbox":[368,306,240,178]}
+{"kind":"shape","id":"sh/i5sneloj","slide":2,"bbox":[392,332,120,34]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":2,"text":"Backend","textPreview":"Backend","textChars":7,"textLines":1,"bbox":[402,339,100,20]}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":2,"text":"Ra quyết định và ghi log","textPreview":"Ra quyết định và ghi log","textChars":24,"textLines":1,"bbox":[392,388,190,58]}
+{"kind":"shape","id":"sh/pwb2hwfy","slide":2,"bbox":[656,306,240,178]}
+{"kind":"shape","id":"sh/ed8v6psf","slide":2,"bbox":[680,332,120,34]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":2,"text":"Firmware","textPreview":"Firmware","textChars":8,"textLines":1,"bbox":[690,339,100,20]}
+{"kind":"textbox","id":"sh/wjudg7ad","slide":2,"text":"Nhận lệnh mở khóa","textPreview":"Nhận lệnh mở khóa","textChars":17,"textLines":1,"bbox":[680,388,190,58]}
+{"kind":"shape","id":"sh/p4r65wju","slide":2,"bbox":[944,306,240,178]}
+{"kind":"shape","id":"sh/ih4byhgn","slide":2,"bbox":[968,332,120,34]}
+{"kind":"textbox","id":"sh/72x4nap4","slide":2,"text":"Dashboard","textPreview":"Dashboard","textChars":9,"textLines":1,"bbox":[978,339,100,20]}
+{"kind":"textbox","id":"sh/ji5snelo","slide":2,"text":"Hiển thị và quản trị","textPreview":"Hiển thị và quản trị","textChars":20,"textLines":1,"bbox":[968,388,190,58]}
+{"kind":"textbox","id":"sh/uxc3ylc7","slide":2,"text":"Kết luận: làm API skeleton trước, sau đó các nhóm bám theo endpoint và payload đã thống nhất.","textPreview":"Kết luận: làm API skeleton trước, sau đó các nhóm bám theo endpoint và payload đã thống nhất.","textChars":93,"textLines":1,"bbox":[86,560,1020,42]}
+{"kind":"textbox","id":"sh/1kre1w7m","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/2lljie","slide":2,"text":""}
+{"kind":"slide","id":"sl/pa60t0","slide":3,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":21}
+{"kind":"textbox","id":"sh/xs72x4na","slide":3,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/q1orytsv","slide":3,"text":"Roadmap nên đi theo 6 giai đoạn có điểm kiểm tra rõ","textPreview":"Roadmap nên đi theo 6 giai đoạn có điểm kiểm tra rõ","textChars":51,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/fmlkjm1c","slide":3,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/8z25kb6x","slide":3,"bbox":[76,190,330,168]}
+{"kind":"textbox","id":"sh/1gvy90je","slide":3,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[98,214,42,40]}
+{"kind":"textbox","id":"sh/qtcj6tov","slide":3,"text":"Chốt kiến trúc","textPreview":"Chốt kiến trúc","textChars":14,"textLines":1,"bbox":[154,212,220,56]}
+{"kind":"textbox","id":"sh/je9cvixc","slide":3,"text":"Luồng dữ liệu, nhánh Git, API contract","textPreview":"Luồng dữ liệu, nhánh Git, API contract","textChars":38,"textLines":1,"bbox":[154,276,218,66]}
+{"kind":"shape","id":"sh/8v6psfil","slide":3,"bbox":[458,190,330,168]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":3,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[480,214,42,40]}
+{"kind":"textbox","id":"sh/donyd0z6","slide":3,"text":"Backend skeleton","textPreview":"Backend skeleton","textChars":16,"textLines":1,"bbox":[536,212,220,56]}
+{"kind":"textbox","id":"sh/k3q5o7qp","slide":3,"text":"Health check, users, logs, lock API","textPreview":"Health check, users, logs, lock API","textChars":35,"textLines":1,"bbox":[536,276,218,66]}
+{"kind":"shape","id":"sh/vixczed8","slide":3,"bbox":[840,190,330,168]}
+{"kind":"textbox","id":"sh/2x4nap4r","slide":3,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[862,214,42,40]}
+{"kind":"textbox","id":"sh/dcbulwva","slide":3,"text":"AI demo","textPreview":"AI demo","textChars":7,"textLines":1,"bbox":[918,212,220,56]}
+{"kind":"textbox","id":"sh/kre1w7mp","slide":3,"text":"Nhận diện trên ảnh/webcam, gửi kết quả mẫu","textPreview":"Nhận diện trên ảnh/webcam, gửi kết quả mẫu","textChars":42,"textLines":1,"bbox":[918,276,218,66]}
+{"kind":"shape","id":"sh/val87ed8","slide":3,"bbox":[76,404,330,168]}
+{"kind":"textbox","id":"sh/6psfil0r","slide":3,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[98,428,42,40]}
+{"kind":"textbox","id":"sh/d8bat47y","slide":3,"text":"Firmware mô phỏng","textPreview":"Firmware mô phỏng","textChars":17,"textLines":1,"bbox":[154,426,220,56]}
+{"kind":"textbox","id":"sh/knih4byh","slide":3,"text":"ESP32 nhận lệnh, bật LED/relay thử","textPreview":"ESP32 nhận lệnh, bật LED/relay thử","textChars":34,"textLines":1,"bbox":[154,490,218,66]}
+{"kind":"shape","id":"sh/wjudg7ad","slide":3,"bbox":[458,404,330,168]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":3,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[480,428,42,40]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":3,"text":"Dashboard","textPreview":"Dashboard","textChars":9,"textLines":1,"bbox":[536,426,220,56]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":3,"text":"Quản lý users, logs, trạng thái thiết bị","textPreview":"Quản lý users, logs, trạng thái thiết bị","textChars":40,"textLines":1,"bbox":[536,490,218,66]}
+{"kind":"shape","id":"sh/0bi9s36h","slide":3,"bbox":[840,404,330,168]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":3,"text":"6","textPreview":"6","textChars":1,"textLines":1,"bbox":[862,428,42,40]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":3,"text":"Ghép phần cứng thật","textPreview":"Ghép phần cứng thật","textChars":19,"textLines":1,"bbox":[918,426,220,56]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":3,"text":"Relay/servo/khóa điện, test an toàn","textPreview":"Relay/servo/khóa điện, test an toàn","textChars":35,"textLines":1,"bbox":[918,490,218,66]}
+{"kind":"textbox","id":"sh/0z61032l","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/pa60t0","slide":3,"text":""}
+{"kind":"slide","id":"sl/zhd9pg","slide":4,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":7}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":4,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/d4vmtwra","slide":4,"text":"Giai đoạn 1 khóa phạm vi để cả nhóm không làm lệch nhau","textPreview":"Giai đoạn 1 khóa phạm vi để cả nhóm không làm lệch nhau","textChars":55,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/oj2t83it","slide":4,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/vmtwra5g","slide":4,"bbox":[82,196,520,360]}
+{"kind":"textbox","id":"sh/61032lsz","slide":4,"text":"Việc cần làm","textPreview":"Việc cần làm","textChars":12,"textLines":1,"bbox":[112,226,300,34]}
+{"kind":"textbox","id":"sh/dsji5sne","slide":4,"text":"• Chốt vai trò từng nhánh feature\n• Chốt API contract bản đầu\n• Chốt database schema dự kiến\n• Chốt firmware nhận lệnh\n• Chốt payload AI gửi về backend","textPreview":"• Chốt vai trò từng nhánh feature | • Chốt API contract bản đầu | • Chốt database schema dự kiến | • Chốt firmware nhận lệnh | • Chốt pay...","textChars":151,"textLines":5,"bbox":[112,282,430,210]}
+{"kind":"shape","id":"sh/o7qpg3ex","slide":4,"bbox":[680,196,520,360]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":4,"text":"Kết quả bàn giao","textPreview":"Kết quả bàn giao","textChars":16,"textLines":1,"bbox":[710,226,330,34]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":4,"text":"• README và wiki cho từng nhánh\n• docs/api.md có endpoint chính\n• docs/architecture.md mô tả luồng\n• docs/setup.md đủ cho người mới chạy\n• Quy tắc PR vào dev rõ ràng","textPreview":"• README và wiki cho từng nhánh | • docs/api.md có endpoint chính | • docs/architecture.md mô tả luồng | • docs/setup.md đủ cho người mới...","textChars":165,"textLines":5,"bbox":[710,282,430,210]}
+{"kind":"textbox","id":"sh/c3ylc7u5","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/zhd9pg","slide":4,"text":""}
+{"kind":"slide","id":"sl/9roude","slide":5,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":14}
+{"kind":"textbox","id":"sh/y90je9cv","slide":5,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/5wjudg7a","slide":5,"text":"Giai đoạn 2 dựng backend để các phần khác có chỗ tích hợp","textPreview":"Giai đoạn 2 dựng backend để các phần khác có chỗ tích hợp","textChars":57,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/gbq1oryt","slide":5,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/n29gr2p8","slide":5,"bbox":[88,182,1050,52]}
+{"kind":"textbox","id":"sh/yhgn29gr","slide":5,"text":"API nền","textPreview":"API nền","textChars":7,"textLines":1,"bbox":[118,194,250,24]}
+{"kind":"textbox","id":"sh/58z25kb6","slide":5,"text":"health, users, devices, access logs","textPreview":"health, users, devices, access logs","textChars":35,"textLines":1,"bbox":[420,194,640,24]}
+{"kind":"shape","id":"sh/gn29gr2p","slide":5,"bbox":[88,258,1050,52]}
+{"kind":"textbox","id":"sh/neloj2t8","slide":5,"text":"Điều khiển khóa","textPreview":"Điều khiển khóa","textChars":15,"textLines":1,"bbox":[118,270,250,24]}
+{"kind":"textbox","id":"sh/ytsvu9kn","slide":5,"text":"lock/unlock, ghi lý do mở khóa","textPreview":"lock/unlock, ghi lý do mở khóa","textChars":30,"textLines":1,"bbox":[420,270,640,24]}
+{"kind":"shape","id":"sh/83itgfml","slide":5,"bbox":[88,334,1050,52]}
+{"kind":"textbox","id":"sh/xobm58z2","slide":5,"text":"Nhận kết quả AI","textPreview":"Nhận kết quả AI","textChars":15,"textLines":1,"bbox":[118,346,250,24]}
+{"kind":"textbox","id":"sh/qxs72x4n","slide":5,"text":"recognition-events, confidence, userId","textPreview":"recognition-events, confidence, userId","textChars":38,"textLines":1,"bbox":[420,346,640,24]}
+{"kind":"shape","id":"sh/fil0rqd4","slide":5,"bbox":[88,410,1050,52]}
+{"kind":"textbox","id":"sh/4fu18jqh","slide":5,"text":"Database","textPreview":"Database","textChars":8,"textLines":1,"bbox":[118,422,250,24]}
+{"kind":"textbox","id":"sh/x0nuxc3y","slide":5,"text":"users, devices, face_embeddings, access_logs","textPreview":"users, devices, face_embeddings, access_logs","textChars":44,"textLines":1,"bbox":[420,422,640,24]}
+{"kind":"shape","id":"sh/m94fu18j","slide":5,"bbox":[88,486,1050,52]}
+{"kind":"textbox","id":"sh/fu18jqh0","slide":5,"text":"Bảo mật","textPreview":"Bảo mật","textChars":7,"textLines":1,"bbox":[118,498,250,24]}
+{"kind":"textbox","id":"sh/4r65wjud","slide":5,"text":"JWT/API key, middleware, error handler","textPreview":"JWT/API key, middleware, error handler","textChars":38,"textLines":1,"bbox":[420,498,640,24]}
+{"kind":"textbox","id":"sh/xc3ylc7u","slide":5,"text":"Điểm kiểm tra: dashboard gọi được API giả, AI gửi được event mẫu, firmware nhận được lệnh mô phỏng.","textPreview":"Điểm kiểm tra: dashboard gọi được API giả, AI gửi được event mẫu, firmware nhận được lệnh mô phỏng.","textChars":99,"textLines":1,"bbox":[92,590,1020,36]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/9roude","slide":5,"text":""}
+{"kind":"slide","id":"sl/urmglo","slide":6,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":8}
+{"kind":"textbox","id":"sh/gr2p8nqx","slide":6,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/r65wjudg","slide":6,"text":"Giai đoạn 3 và 4 chạy demo riêng trước khi lắp khóa thật","textPreview":"Giai đoạn 3 và 4 chạy demo riêng trước khi lắp khóa thật","textChars":56,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/ylc7u54z","slide":6,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/5o7qpg3e","slide":6,"bbox":[78,192,500,330]}
+{"kind":"textbox","id":"sh/g3ex0nux","slide":6,"text":"AI nhận diện demo","textPreview":"AI nhận diện demo","textChars":17,"textLines":1,"bbox":[112,228,330,34]}
+{"kind":"textbox","id":"sh/nih4byhg","slide":6,"text":"• Chạy với ảnh test hoặc webcam\n• Trả recognized, userId, confidence\n• Thử người được phép và người lạ\n• Gửi event mẫu về backend","textPreview":"• Chạy với ảnh test hoặc webcam | • Trả recognized, userId, confidence | • Thử người được phép và người lạ | • Gửi event mẫu về backend","textChars":129,"textLines":4,"bbox":[112,292,390,170]}
+{"kind":"shape","id":"sh/yxobm58z","slide":6,"bbox":[704,192,500,330]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":6,"text":"Firmware mô phỏng","textPreview":"Firmware mô phỏng","textChars":17,"textLines":1,"bbox":[738,228,330,34]}
+{"kind":"textbox","id":"sh/g7adsji5","slide":6,"text":"• ESP32 kết nối Wi-Fi\n• Nhận lệnh lock/unlock\n• Bật LED hoặc relay thử\n• Báo trạng thái online/offline","textPreview":"• ESP32 kết nối Wi-Fi | • Nhận lệnh lock/unlock | • Bật LED hoặc relay thử | • Báo trạng thái online/offline","textChars":102,"textLines":4,"bbox":[738,292,390,170]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":6,"text":"Chỉ chuyển sang phần cứng thật khi cả AI demo và firmware mô phỏng đều chạy ổn.","textPreview":"Chỉ chuyển sang phần cứng thật khi cả AI demo và firmware mô phỏng đều chạy ổn.","textChars":79,"textLines":1,"bbox":[108,582,1010,36]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/urmglo","slide":6,"text":""}
+{"kind":"slide","id":"sl/cpqei7","slide":7,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":12}
+{"kind":"textbox","id":"sh/hgn29gr2","slide":7,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":7,"text":"Giai đoạn 5 dashboard giúp kiểm tra hệ thống bằng mắt","textPreview":"Giai đoạn 5 dashboard giúp kiểm tra hệ thống bằng mắt","textChars":53,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/za1gvy90","slide":7,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/s36hcrmh","slide":7,"bbox":[86,198,500,128]}
+{"kind":"textbox","id":"sh/hoza1gvy","slide":7,"text":"Tổng quan","textPreview":"Tổng quan","textChars":9,"textLines":1,"bbox":[116,222,220,30]}
+{"kind":"textbox","id":"sh/a1gvy90j","slide":7,"text":"Trạng thái khóa, camera, ESP32, backend","textPreview":"Trạng thái khóa, camera, ESP32, backend","textChars":39,"textLines":1,"bbox":[116,266,390,34]}
+{"kind":"shape","id":"sh/zidonyd0","slide":7,"bbox":[86,376,500,128]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":7,"text":"Người dùng","textPreview":"Người dùng","textChars":10,"textLines":1,"bbox":[116,400,220,30]}
+{"kind":"textbox","id":"sh/lszqtcj6","slide":7,"text":"Thêm, sửa, vô hiệu hóa người được phép","textPreview":"Thêm, sửa, vô hiệu hóa người được phép","textChars":38,"textLines":1,"bbox":[116,444,390,34]}
+{"kind":"shape","id":"sh/h0fepkzu","slide":7,"bbox":[684,198,500,128]}
+{"kind":"textbox","id":"sh/sfil0rqd","slide":7,"text":"Lịch sử","textPreview":"Lịch sử","textChars":7,"textLines":1,"bbox":[714,222,220,30]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":7,"text":"Ai vào, lúc nào, kết quả allowed/denied","textPreview":"Ai vào, lúc nào, kết quả allowed/denied","textChars":39,"textLines":1,"bbox":[714,266,390,34]}
+{"kind":"shape","id":"sh/a9w3m94f","slide":7,"bbox":[684,376,500,128]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":7,"text":"Thiết bị","textPreview":"Thiết bị","textChars":8,"textLines":1,"bbox":[714,400,220,30]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":7,"text":"Online/offline, lần kết nối cuối, lỗi gần nhất","textPreview":"Online/offline, lần kết nối cuối, lỗi gần nhất","textChars":46,"textLines":1,"bbox":[714,444,390,34]}
+{"kind":"textbox","id":"sh/z61032ls","slide":7,"text":"Dashboard không cần đợi khóa thật. Có thể dùng API giả hoặc dữ liệu mẫu để kiểm tra giao diện sớm.","textPreview":"Dashboard không cần đợi khóa thật. Có thể dùng API giả hoặc dữ liệu mẫu để kiểm tra giao diện sớm.","textChars":98,"textLines":1,"bbox":[92,570,1020,48]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/cpqei7","slide":7,"text":""}
+{"kind":"slide","id":"sl/5dxfj3","slide":8,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":7}
+{"kind":"textbox","id":"sh/upwb2hwf","slide":8,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":8,"text":"Giai đoạn 6 mới ghép phần cứng thật để giảm rủi ro","textPreview":"Giai đoạn 6 mới ghép phần cứng thật để giảm rủi ro","textChars":50,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/cvixczed","slide":8,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/nyd0z610","slide":8,"bbox":[88,190,525,368]}
+{"kind":"textbox","id":"sh/udg7adsj","slide":8,"text":"Checklist an toàn","textPreview":"Checklist an toàn","textChars":17,"textLines":1,"bbox":[124,224,330,34]}
+{"kind":"textbox","id":"sh/54zidony","slide":8,"text":"• Nguồn riêng cho khóa điện hoặc servo nếu cần dòng lớn\n• Nối chung GND giữa ESP32 và module điều khiển\n• Không cấp tải khóa điện trực tiếp từ chân GPIO\n• Test relay/servo trên bàn trước khi gắn vào cửa\n• Có phương án mở cửa thủ công nếu hệ thống lỗi\n• Ghi log mọi lần mở khóa để truy vết","textPreview":"• Nguồn riêng cho khóa điện hoặc servo nếu cần dòng lớn | • Nối chung GND giữa ESP32 và module điều khiển | • Không cấp tải khóa điện trự...","textChars":288,"textLines":6,"bbox":[124,286,420,210]}
+{"kind":"shape","id":"sh/cj6tovah","slide":8,"bbox":[702,190,420,368]}
+{"kind":"textbox","id":"sh/judg7ads","slide":8,"text":"Không làm ngay","textPreview":"Không làm ngay","textChars":14,"textLines":1,"bbox":[738,224,260,34]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":8,"text":"• Không gắn khóa thật khi API chưa ổn\n• Không test nguồn lớn khi chưa đo tải\n• Không để khóa phụ thuộc duy nhất vào AI\n• Không bỏ qua cách mở dự phòng","textPreview":"• Không gắn khóa thật khi API chưa ổn | • Không test nguồn lớn khi chưa đo tải | • Không để khóa phụ thuộc duy nhất vào AI | • Không bỏ q...","textChars":150,"textLines":4,"bbox":[738,286,300,190]}
+{"kind":"textbox","id":"sh/47y1kre1","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/5dxfj3","slide":8,"text":""}
+{"kind":"slide","id":"sl/xu4a84","slide":9,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":12}
+{"kind":"textbox","id":"sh/itgfmlkj","slide":9,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/pkzupwb2","slide":9,"text":"Phân công theo nhánh giúp merge vào dev an toàn hơn","textPreview":"Phân công theo nhánh giúp merge vào dev an toàn hơn","textChars":51,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/0z61032l","slide":9,"bbox":[72,150,1136,2]}
+{"kind":"shape","id":"sh/72x4nap4","slide":9,"bbox":[96,186,250,34]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":9,"text":"feature/backend-api","textPreview":"feature/backend-api","textChars":19,"textLines":1,"bbox":[106,193,230,20]}
+{"kind":"shape","id":"sh/p8nqxs72","slide":9,"bbox":[388,183,700,40]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":9,"text":"backend/, docs/api.md, test API","textPreview":"backend/, docs/api.md, test API","textChars":31,"textLines":1,"bbox":[414,193,620,22]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":9,"bbox":[96,278,250,34]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":9,"text":"feature/face-recognition","textPreview":"feature/face-recognition","textChars":24,"textLines":1,"bbox":[106,285,230,20]}
+{"kind":"shape","id":"sh/8v6psfil","slide":9,"bbox":[388,275,700,40]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":9,"text":"ai-model/, payload recognition event","textPreview":"ai-model/, payload recognition event","textChars":36,"textLines":1,"bbox":[414,285,620,22]}
+{"kind":"shape","id":"sh/qpg3ex0n","slide":9,"bbox":[96,370,250,34]}
+{"kind":"textbox","id":"sh/fa9w3m94","slide":9,"text":"feature/esp32-firmware","textPreview":"feature/esp32-firmware","textChars":22,"textLines":1,"bbox":[106,377,230,20]}
+{"kind":"shape","id":"sh/8jqh0fep","slide":9,"bbox":[388,367,700,40]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":9,"text":"firmware/, hardware/, tests/hardware","textPreview":"firmware/, hardware/, tests/hardware","textChars":36,"textLines":1,"bbox":[414,377,620,22]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":9,"bbox":[96,462,250,34]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":9,"text":"feature/web-dashboard","textPreview":"feature/web-dashboard","textChars":21,"textLines":1,"bbox":[106,469,230,20]}
+{"kind":"shape","id":"sh/87ed8bat","slide":9,"bbox":[388,459,700,40]}
+{"kind":"textbox","id":"sh/xs72x4na","slide":9,"text":"dashboard/, web/app/, tích hợp API","textPreview":"dashboard/, web/app/, tích hợp API","textChars":34,"textLines":1,"bbox":[414,469,620,22]}
+{"kind":"textbox","id":"sh/lwval87e","slide":9,"text":"Quy tắc nhóm: branch có thể thấy full source, nhưng mỗi người chỉ sửa đúng phạm vi được giao.","textPreview":"Quy tắc nhóm: branch có thể thấy full source, nhưng mỗi người chỉ sửa đúng phạm vi được giao.","textChars":93,"textLines":1,"bbox":[96,590,1010,40]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/xu4a84","slide":9,"text":""}
+{"kind":"slide","id":"sl/2tcd9l","slide":10,"title":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textShapes":8}
+{"kind":"textbox","id":"sh/upwb2hwf","slide":10,"text":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textPreview":"KHÓA CỬA NHẬN DIỆN KHUÔN MẶT","textChars":28,"textLines":1,"bbox":[72,38,620,26]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":10,"text":"Kế hoạch kết thúc bằng bản demo tích hợp từng lớp","textPreview":"Kế hoạch kết thúc bằng bản demo tích hợp từng lớp","textChars":49,"textLines":1,"bbox":[72,76,1080,66]}
+{"kind":"shape","id":"sh/cvixczed","slide":10,"bbox":[72,150,1136,2]}
+{"kind":"textbox","id":"sh/nyd0z610","slide":10,"text":"Mốc demo cuối nên chứng minh được toàn bộ luồng: nhận diện khuôn mặt → backend quyết định → firmware mở khóa → dashboard ghi nhận.","textPreview":"Mốc demo cuối nên chứng minh được toàn bộ luồng: nhận diện khuôn mặt → backend quyết định → firmware mở khóa → dashboard ghi nhận.","textChars":130,"textLines":1,"bbox":[78,180,1040,72]}
+{"kind":"shape","id":"sh/udg7adsj","slide":10,"bbox":[92,300,520,262]}
+{"kind":"textbox","id":"sh/54zidony","slide":10,"text":"Tiêu chí hoàn thành","textPreview":"Tiêu chí hoàn thành","textChars":19,"textLines":1,"bbox":[126,334,330,34]}
+{"kind":"textbox","id":"sh/cj6tovah","slide":10,"text":"• Backend chạy được API chính\n• AI gửi event nhận diện mẫu\n• Firmware nhận lệnh và phản hồi trạng thái\n• Dashboard hiển thị users, logs, device status\n• Phần cứng thật mở khóa an toàn trong test","textPreview":"• Backend chạy được API chính | • AI gửi event nhận diện mẫu | • Firmware nhận lệnh và phản hồi trạng thái | • Dashboard hiển thị users, ...","textChars":194,"textLines":5,"bbox":[126,392,410,130]}
+{"kind":"shape","id":"sh/judg7ads","slide":10,"bbox":[704,300,420,262]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":10,"text":"Thứ tự ưu tiên","textPreview":"Thứ tự ưu tiên","textChars":14,"textLines":1,"bbox":[738,334,300,34]}
+{"kind":"textbox","id":"sh/47y1kre1","slide":10,"text":"API trước\nDemo riêng từng phần\nDashboard kiểm tra\nPhần cứng thật sau cùng","textPreview":"API trước | Demo riêng từng phần | Dashboard kiểm tra | Phần cứng thật sau cùng","textChars":73,"textLines":4,"bbox":[738,392,300,120]}
+{"kind":"textbox","id":"sh/tsvu9kni","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1164,664,48,24]}
+{"kind":"notes","id":"nt/2tcd9l","slide":10,"text":""}

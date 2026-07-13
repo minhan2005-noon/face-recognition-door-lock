@@ -1,1 +1,30 @@
-
+{
+  "name": "face-recognition-door-lock-backend",
+  "version": "1.0.0",
+  "description": "REST API for the face recognition door lock system.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": [
+    "face-recognition",
+    "door-lock",
+    "express",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0",
+    "mqtt": "^5.15.2",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
