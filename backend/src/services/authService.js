@@ -203,8 +203,6 @@ async function loginAccount({ username, password }) {
          lock_penalty_count = 0,
          locked_login_attempt_count = 0,
          locked_until = NULL,
-         api_key_blocked_until = NULL,
-         api_key_block_attempt_count = 0,
          updated_at = datetime('now')
      WHERE id = ?`,
     [account.id]

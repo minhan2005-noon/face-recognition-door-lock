@@ -8,7 +8,7 @@ const STORAGE_KEYS = {
   selectedScanUserId: 'doorLockDashboard.selectedScanUserId',
   sessionToken: 'doorLockDashboard.sessionToken',
   account: 'doorLockDashboard.account',
-  apiKeyBlockedUntil: 'doorLockDashboard.apiKeyBlockedUntil'
+  apiKeyBlocks: 'doorLockDashboard.apiKeyBlocks'
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -40,7 +40,7 @@ const state = {
   sessionToken: localStorage.getItem(STORAGE_KEYS.sessionToken) || '',
   account: loadStoredAccount(),
   authMode: 'login',
-  apiKeyBlockedUntil: Number(localStorage.getItem(STORAGE_KEYS.apiKeyBlockedUntil) || 0),
+  apiKeyBlockedUntil: 0,
   apiKeyBlockTimer: null,
   health: null,
   devices: [],
@@ -360,8 +360,13 @@ async function bootAuth() {
   try {
     const payload = await requestApi(ENDPOINTS.me);
     state.account = payload.data.account;
+    state.apiKeyBlockedUntil = getStoredApiKeyBlock(state.account);
     persistAccount();
     renderAuthState();
+    if (isApiKeyBlocked()) {
+      showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi tải dữ liệu.');
+      return;
+    }
     await refreshAll();
   } catch (error) {
     clearSession();
@@ -418,6 +423,10 @@ async function handleAuthSubmit(event) {
     applyAuthPayload(payload.data);
     elements.authPasswordInput.value = '';
     showToast(state.authMode === 'register' ? 'Đăng ký thành công.' : 'Đăng nhập thành công.');
+    if (isApiKeyBlocked()) {
+      showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi tải dữ liệu.');
+      return;
+    }
     await refreshAll();
   } catch (error) {
     showAuthError(error);
@@ -427,7 +436,7 @@ async function handleAuthSubmit(event) {
 function applyAuthPayload(data) {
   state.sessionToken = data.session.token;
   state.account = data.account;
-  clearApiKeyBlock();
+  state.apiKeyBlockedUntil = getStoredApiKeyBlock(data.account);
   localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
   persistAccount();
   renderAuthState();
@@ -463,6 +472,7 @@ async function logout() {
 function clearSession() {
   state.sessionToken = '';
   state.account = null;
+  state.apiKeyBlockedUntil = 0;
   state.health = null;
   state.error = null;
   state.socketState = 'idle';
@@ -620,13 +630,13 @@ function isApiKeyBlocked() {
 
 function startApiKeyBlock(remainingMs) {
   state.apiKeyBlockedUntil = Date.now() + remainingMs;
-  localStorage.setItem(STORAGE_KEYS.apiKeyBlockedUntil, String(state.apiKeyBlockedUntil));
+  setStoredApiKeyBlock(state.account, state.apiKeyBlockedUntil);
   renderApiKeyGuard();
 }
 
 function clearApiKeyBlock() {
+  clearStoredApiKeyBlock(state.account);
   state.apiKeyBlockedUntil = 0;
-  localStorage.removeItem(STORAGE_KEYS.apiKeyBlockedUntil);
   if (state.apiKeyBlockTimer) {
     window.clearTimeout(state.apiKeyBlockTimer);
     state.apiKeyBlockTimer = null;
@@ -664,6 +674,10 @@ function renderApiKeyGuard() {
 }
 
 function handleApiKeyBlockedClick() {
+  if (!state.sessionToken || !state.account) {
+    return false;
+  }
+
   if (!isApiKeyBlocked()) {
     renderApiKeyGuard();
     return false;
@@ -678,6 +692,54 @@ function forceLocalLogout(message) {
   renderAuthState();
   renderAll();
   showToast(message);
+}
+
+function getStoredApiKeyBlock(account) {
+  const key = getAccountStorageKey(account);
+  if (!key) return 0;
+  const blocks = loadApiKeyBlocks();
+  const blockedUntil = Number(blocks[key] || 0);
+  if (blockedUntil && blockedUntil <= Date.now()) {
+    delete blocks[key];
+    saveApiKeyBlocks(blocks);
+    return 0;
+  }
+
+  return blockedUntil;
+}
+
+function setStoredApiKeyBlock(account, blockedUntil) {
+  const key = getAccountStorageKey(account);
+  if (!key) return;
+  const blocks = loadApiKeyBlocks();
+  blocks[key] = blockedUntil;
+  saveApiKeyBlocks(blocks);
+}
+
+function clearStoredApiKeyBlock(account) {
+  const key = getAccountStorageKey(account);
+  if (!key) return;
+  const blocks = loadApiKeyBlocks();
+  if (!blocks[key]) return;
+  delete blocks[key];
+  saveApiKeyBlocks(blocks);
+}
+
+function loadApiKeyBlocks() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.apiKeyBlocks) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveApiKeyBlocks(blocks) {
+  localStorage.setItem(STORAGE_KEYS.apiKeyBlocks, JSON.stringify(blocks));
+}
+
+function getAccountStorageKey(account) {
+  return account?.id || account?.username || '';
 }
 
 function handleScanDeviceChange() {
