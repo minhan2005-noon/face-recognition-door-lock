@@ -8,7 +8,6 @@ const STORAGE_KEYS = {
   selectedScanUserId: 'doorLockDashboard.selectedScanUserId',
   sessionToken: 'doorLockDashboard.sessionToken',
   account: 'doorLockDashboard.account',
-  verifiedApiKey: 'doorLockDashboard.verifiedApiKey',
   apiKeyBlocks: 'doorLockDashboard.apiKeyBlocks'
 };
 
@@ -36,7 +35,7 @@ const ENDPOINTS = {
 
 const state = {
   apiBase: localStorage.getItem(STORAGE_KEYS.apiBase) || DEFAULT_API_BASE,
-  apiKey: localStorage.getItem(STORAGE_KEYS.apiKey) || '',
+  apiKey: '',
   sessionToken: localStorage.getItem(STORAGE_KEYS.sessionToken) || '',
   account: loadStoredAccount(),
   authMode: 'login',
@@ -61,6 +60,8 @@ const state = {
 };
 
 localStorage.removeItem('doorLockDashboard.apiKeyBlockedUntil');
+localStorage.removeItem(STORAGE_KEYS.apiKey);
+localStorage.removeItem('doorLockDashboard.verifiedApiKey');
 
 document.querySelector('#app').innerHTML = `
   <header class="app-header">
@@ -449,6 +450,7 @@ function applyAuthPayload(data) {
   state.sessionToken = data.session.token;
   state.account = data.account;
   state.apiKeyBlockedUntil = getStoredApiKeyBlock(data.account);
+  clearSavedApiKey();
   localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
   persistAccount();
   renderAuthState();
@@ -485,6 +487,7 @@ function clearSession() {
   state.sessionToken = '';
   state.account = null;
   state.apiKeyBlockedUntil = 0;
+  clearSavedApiKey();
   state.health = null;
   state.error = null;
   state.socketState = 'idle';
@@ -627,10 +630,8 @@ function saveConfig() {
 
   if (!apiKey) {
     state.apiBase = apiBase;
-    state.apiKey = '';
     localStorage.setItem(STORAGE_KEYS.apiBase, apiBase);
-    localStorage.removeItem(STORAGE_KEYS.apiKey);
-    localStorage.removeItem(STORAGE_KEYS.verifiedApiKey);
+    clearSavedApiKey();
     showToast('Nhập mã truy cập trước khi lưu cấu hình.');
     return;
   }
@@ -638,7 +639,6 @@ function saveConfig() {
   state.apiBase = apiBase;
   state.apiKey = apiKey;
   localStorage.setItem(STORAGE_KEYS.apiBase, apiBase);
-  localStorage.setItem(STORAGE_KEYS.apiKey, apiKey);
 
   if (state.socket) {
     state.socket.close();
@@ -700,7 +700,7 @@ function clearSavedApiKey() {
   state.apiKey = '';
   elements.apiKeyInput.value = '';
   localStorage.removeItem(STORAGE_KEYS.apiKey);
-  localStorage.removeItem(STORAGE_KEYS.verifiedApiKey);
+  localStorage.removeItem('doorLockDashboard.verifiedApiKey');
 }
 
 async function refreshAfterAuth() {
@@ -713,9 +713,7 @@ async function refreshAfterAuth() {
 }
 
 function markApiKeyVerified() {
-  if (state.apiKey) {
-    localStorage.setItem(STORAGE_KEYS.verifiedApiKey, state.apiKey);
-  }
+  // API key stays in memory only; do not persist it across accounts.
 }
 
 function isApiKeyBlocked() {
