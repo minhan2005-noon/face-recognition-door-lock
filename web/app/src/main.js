@@ -13,7 +13,6 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY || 'minhan123';
 
 const ENDPOINTS = {
   register: { method: 'POST', path: '/auth/register', label: 'Đăng ký' },
@@ -37,7 +36,7 @@ const ENDPOINTS = {
 
 const state = {
   apiBase: localStorage.getItem(STORAGE_KEYS.apiBase) || DEFAULT_API_BASE,
-  apiKey: localStorage.getItem(STORAGE_KEYS.apiKey) || DEFAULT_API_KEY,
+  apiKey: localStorage.getItem(STORAGE_KEYS.apiKey) || '',
   sessionToken: localStorage.getItem(STORAGE_KEYS.sessionToken) || '',
   account: loadStoredAccount(),
   authMode: 'login',
@@ -60,6 +59,8 @@ const state = {
   cameraReady: false,
   faceProfiles: loadStoredFaceProfiles()
 };
+
+localStorage.removeItem('doorLockDashboard.apiKeyBlockedUntil');
 
 document.querySelector('#app').innerHTML = `
   <header class="app-header">
@@ -657,16 +658,7 @@ async function refreshAfterAuth() {
     return;
   }
 
-  if (!isApiKeyTrustedForAutoLoad()) {
-    showToast('Mã truy cập chưa được xác nhận. Bấm Lưu cấu hình để tải dữ liệu.');
-    return;
-  }
-
-  await refreshAll();
-}
-
-function isApiKeyTrustedForAutoLoad() {
-  return state.apiKey === DEFAULT_API_KEY || localStorage.getItem(STORAGE_KEYS.verifiedApiKey) === state.apiKey;
+  showToast('Bấm Lưu cấu hình để xác nhận mã truy cập và tải dữ liệu.');
 }
 
 function markApiKeyVerified() {
@@ -734,7 +726,8 @@ function handleApiKeyBlockedClick() {
     return false;
   }
 
-  forceLocalLogout('Bạn đã bị đăng xuất vì tiếp tục thao tác mã truy cập khi đang bị chặn.');
+  renderApiKeyGuard();
+  showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi thao tác tiếp.');
   return true;
 }
 
