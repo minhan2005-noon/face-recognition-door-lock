@@ -19,3 +19,34 @@ Thư mục này chứa module suy luận dùng khi camera nhận diện khuôn m
 - Kiểm tra với ảnh người lạ.
 - Ghi nhận ngưỡng chấp nhận/từ chối.
 
+## Chạy dự đoán hiện tại
+
+Sau khi train xong:
+
+```bash
+python3 ai-model/inference/recognizer.py ai-model/dataset/test_images/test.jpg
+```
+
+Nếu muốn chỉnh ngưỡng nhận diện:
+
+```bash
+python3 ai-model/inference/recognizer.py ai-model/dataset/test_images/test.jpg --threshold 0.7
+```
+
+Output trả JSON gồm `recognized`, `label`, `bestLabel`, `confidence`, `threshold`, `faceDetected`.
+
+## Scan bằng camera Mac
+
+Sau khi train xong model:
+
+```bash
+python3 ai-model/inference/camera_scan.py
+```
+
+Script sẽ mở webcam, detect mặt và hiển thị nhãn dự đoán trực tiếp trên khung hình. Nhấn `q` để dừng.
+
+Nếu macOS hỏi quyền camera, cấp quyền cho Terminal/Python. Có thể đổi camera index bằng:
+
+```bash
+python3 ai-model/inference/camera_scan.py --camera 1
+```
