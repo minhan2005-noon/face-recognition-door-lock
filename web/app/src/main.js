@@ -7,8 +7,7 @@ const STORAGE_KEYS = {
   selectedDeviceId: 'doorLockDashboard.selectedDeviceId',
   selectedScanUserId: 'doorLockDashboard.selectedScanUserId',
   sessionToken: 'doorLockDashboard.sessionToken',
-  account: 'doorLockDashboard.account',
-  apiKeyBlocks: 'doorLockDashboard.apiKeyBlocks'
+  account: 'doorLockDashboard.account'
 };
 
 const DEFAULT_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -39,8 +38,6 @@ const state = {
   sessionToken: localStorage.getItem(STORAGE_KEYS.sessionToken) || '',
   account: loadStoredAccount(),
   authMode: 'login',
-  apiKeyBlockedUntil: 0,
-  apiKeyBlockTimer: null,
   health: null,
   devices: [],
   users: [],
@@ -62,6 +59,7 @@ const state = {
 localStorage.removeItem('doorLockDashboard.apiKeyBlockedUntil');
 localStorage.removeItem(STORAGE_KEYS.apiKey);
 localStorage.removeItem('doorLockDashboard.verifiedApiKey');
+localStorage.removeItem('doorLockDashboard.apiKeyBlocks');
 
 document.querySelector('#app').innerHTML = `
   <header class="app-header">
@@ -373,13 +371,8 @@ async function bootAuth() {
   try {
     const payload = await requestApi(ENDPOINTS.me);
     state.account = payload.data.account;
-    state.apiKeyBlockedUntil = getStoredApiKeyBlock(state.account);
     persistAccount();
     renderAuthState();
-    if (isApiKeyBlocked()) {
-      showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi tải dữ liệu.');
-      return;
-    }
     await refreshAfterAuth();
   } catch (error) {
     clearSession();
@@ -396,7 +389,6 @@ function renderAuthState() {
   elements.accountName.textContent = state.account?.displayName || state.account?.username || 'Tài khoản';
   renderAuthMode();
   renderRuntimeStatus();
-  renderApiKeyGuard();
 }
 
 function renderAuthMode() {
@@ -436,10 +428,6 @@ async function handleAuthSubmit(event) {
     applyAuthPayload(payload.data);
     elements.authPasswordInput.value = '';
     showToast(state.authMode === 'register' ? 'Đăng ký thành công.' : 'Đăng nhập thành công.');
-    if (isApiKeyBlocked()) {
-      showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi tải dữ liệu.');
-      return;
-    }
     await refreshAfterAuth();
   } catch (error) {
     showAuthError(error);
@@ -449,7 +437,6 @@ async function handleAuthSubmit(event) {
 function applyAuthPayload(data) {
   state.sessionToken = data.session.token;
   state.account = data.account;
-  state.apiKeyBlockedUntil = getStoredApiKeyBlock(data.account);
   clearSavedApiKey();
   localStorage.setItem(STORAGE_KEYS.sessionToken, state.sessionToken);
   persistAccount();
@@ -486,7 +473,6 @@ async function logout() {
 function clearSession() {
   state.sessionToken = '';
   state.account = null;
-  state.apiKeyBlockedUntil = 0;
   clearSavedApiKey();
   state.health = null;
   state.error = null;
@@ -500,10 +486,6 @@ function clearSession() {
 }
 
 async function refreshAll() {
-  if (handleApiKeyBlockedClick()) {
-    return;
-  }
-
   if (!state.sessionToken) {
     renderAuthState();
     return;
@@ -621,10 +603,6 @@ async function requestApi(endpoint, options = {}) {
 }
 
 function saveConfig() {
-  if (handleApiKeyBlockedClick()) {
-    return;
-  }
-
   const apiBase = normalizeApiBase(elements.apiBaseInput.value || DEFAULT_API_BASE);
   const apiKey = elements.apiKeyInput.value.trim();
 
@@ -649,16 +627,8 @@ function saveConfig() {
 }
 
 function handleSecurityError(error) {
-  if (error.errorCode === 'API_KEY_BLOCKED') {
-    startApiKeyBlock(error.remainingMs || 5 * 60 * 1000);
+  if (error.errorCode === 'UNAUTHORIZED') {
     clearSavedApiKey();
-    return;
-  }
-
-  if (error.errorCode === 'API_KEY_SPAM_LOGOUT') {
-    startApiKeyBlock(error.remainingMs || 5 * 60 * 1000);
-    clearSavedApiKey();
-    showToast('Mã truy cập đang bị chặn. Chờ hết thời gian rồi nhập lại mã.');
   }
 }
 
@@ -669,14 +639,6 @@ function guardPrivateApiRequest(endpoint) {
 
   if (!state.sessionToken || !state.account) {
     return createClientError('Bạn cần đăng nhập để tiếp tục.', 'LOGIN_REQUIRED');
-  }
-
-  if (isApiKeyBlocked()) {
-    renderApiKeyGuard();
-    return createClientError(
-      'Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi thao tác tiếp.',
-      'API_KEY_BLOCKED_CLIENT'
-    );
   }
 
   if (!state.apiKey) {
@@ -714,125 +676,6 @@ async function refreshAfterAuth() {
 
 function markApiKeyVerified() {
   // API key stays in memory only; do not persist it across accounts.
-}
-
-function isApiKeyBlocked() {
-  return state.apiKeyBlockedUntil && Date.now() < state.apiKeyBlockedUntil;
-}
-
-function startApiKeyBlock(remainingMs) {
-  state.apiKeyBlockedUntil = Date.now() + remainingMs;
-  setStoredApiKeyBlock(state.account, state.apiKeyBlockedUntil);
-  renderApiKeyGuard();
-}
-
-function clearApiKeyBlock() {
-  clearStoredApiKeyBlock(state.account);
-  state.apiKeyBlockedUntil = 0;
-  if (state.apiKeyBlockTimer) {
-    window.clearTimeout(state.apiKeyBlockTimer);
-    state.apiKeyBlockTimer = null;
-  }
-  renderApiKeyGuard();
-}
-
-function renderApiKeyGuard() {
-  if (!elements.saveConfigBtn || !elements.refreshAllBtn) return;
-
-  if (!isApiKeyBlocked()) {
-    if (state.apiKeyBlockedUntil) {
-      clearApiKeyBlock();
-    }
-    elements.saveConfigBtn.textContent = 'Lưu cấu hình';
-    elements.saveConfigBtn.classList.remove('danger');
-    elements.refreshAllBtn.textContent = 'Tải lại';
-    elements.refreshAllBtn.classList.remove('danger');
-    return;
-  }
-
-  const remainingSeconds = Math.ceil((state.apiKeyBlockedUntil - Date.now()) / 1000);
-  const remainingLabel = formatDuration(remainingSeconds);
-  elements.saveConfigBtn.textContent = `Bị chặn X ${remainingLabel}`;
-  elements.saveConfigBtn.classList.add('danger');
-  elements.refreshAllBtn.textContent = `Bị chặn X`;
-  elements.refreshAllBtn.classList.add('danger');
-
-  if (!state.apiKeyBlockTimer) {
-    state.apiKeyBlockTimer = window.setTimeout(() => {
-      state.apiKeyBlockTimer = null;
-      renderApiKeyGuard();
-    }, 1000);
-  }
-}
-
-function handleApiKeyBlockedClick() {
-  if (!state.sessionToken || !state.account) {
-    return false;
-  }
-
-  if (!isApiKeyBlocked()) {
-    renderApiKeyGuard();
-    return false;
-  }
-
-  renderApiKeyGuard();
-  showToast('Mã truy cập của tài khoản này đang bị chặn. Chờ hết thời gian trước khi thao tác tiếp.');
-  return true;
-}
-
-function forceLocalLogout(message) {
-  clearSession();
-  renderAuthState();
-  renderAll();
-  showToast(message);
-}
-
-function getStoredApiKeyBlock(account) {
-  const key = getAccountStorageKey(account);
-  if (!key) return 0;
-  const blocks = loadApiKeyBlocks();
-  const blockedUntil = Number(blocks[key] || 0);
-  if (blockedUntil && blockedUntil <= Date.now()) {
-    delete blocks[key];
-    saveApiKeyBlocks(blocks);
-    return 0;
-  }
-
-  return blockedUntil;
-}
-
-function setStoredApiKeyBlock(account, blockedUntil) {
-  const key = getAccountStorageKey(account);
-  if (!key) return;
-  const blocks = loadApiKeyBlocks();
-  blocks[key] = blockedUntil;
-  saveApiKeyBlocks(blocks);
-}
-
-function clearStoredApiKeyBlock(account) {
-  const key = getAccountStorageKey(account);
-  if (!key) return;
-  const blocks = loadApiKeyBlocks();
-  if (!blocks[key]) return;
-  delete blocks[key];
-  saveApiKeyBlocks(blocks);
-}
-
-function loadApiKeyBlocks() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.apiKeyBlocks) || '{}');
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch (error) {
-    return {};
-  }
-}
-
-function saveApiKeyBlocks(blocks) {
-  localStorage.setItem(STORAGE_KEYS.apiKeyBlocks, JSON.stringify(blocks));
-}
-
-function getAccountStorageKey(account) {
-  return account?.id || account?.username || '';
 }
 
 function handleScanDeviceChange() {
@@ -1712,12 +1555,6 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('vi-VN');
-}
-
-function formatDuration(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
 function formatAction(value) {

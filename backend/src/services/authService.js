@@ -7,7 +7,6 @@ const BASE_LOCK_MS = Number(process.env.LOGIN_LOCK_BASE_MS || 2 * 60 * 1000);
 const MAX_LOCK_MS = Number(process.env.LOGIN_LOCK_MAX_MS || 60 * 60 * 1000);
 const LOGIN_FAILURES_BEFORE_LOCK = Number(process.env.LOGIN_FAILURES_BEFORE_LOCK || 3);
 const LOCKED_LOGIN_DELETE_THRESHOLD = Number(process.env.LOCKED_LOGIN_DELETE_THRESHOLD || 3);
-const API_KEY_BLOCK_MS = Number(process.env.API_KEY_BLOCK_MS || 5 * 60 * 1000);
 
 function normalizeUsername(username = '') {
   return String(username).trim().toLowerCase();
@@ -55,18 +54,6 @@ function getLockInfo(account) {
   const remainingMs = new Date(account.locked_until).getTime() - Date.now();
   return {
     locked: remainingMs > 0,
-    remainingMs: Math.max(0, remainingMs)
-  };
-}
-
-function getApiKeyBlockInfo(account) {
-  if (!account?.api_key_blocked_until) {
-    return { blocked: false, remainingMs: 0 };
-  }
-
-  const remainingMs = new Date(account.api_key_blocked_until).getTime() - Date.now();
-  return {
-    blocked: remainingMs > 0,
     remainingMs: Math.max(0, remainingMs)
   };
 }
@@ -257,87 +244,12 @@ async function logoutSession(token) {
   await run('DELETE FROM auth_sessions WHERE token_hash = ?', [hashToken(token)]);
 }
 
-async function logoutAllAccountSessions(accountId) {
-  if (!accountId) return;
-  await run('DELETE FROM auth_sessions WHERE account_id = ?', [accountId]);
-}
-
 async function deleteAccount(accountId) {
   await run('DELETE FROM app_accounts WHERE id = ?', [accountId]);
 }
 
-async function getApiKeyBlockBySessionToken(token) {
-  const account = await getAccountRowBySessionToken(token);
-  if (!account) {
-    return { account: null, blocked: false, remainingMs: 0 };
-  }
-
-  const blockInfo = getApiKeyBlockInfo(account);
-  if (!blockInfo.blocked && account.api_key_blocked_until) {
-    await clearApiKeyBlock(account.id);
-  }
-
-  return {
-    account,
-    ...blockInfo
-  };
-}
-
-async function blockApiKeyBySessionToken(token) {
-  const account = await getAccountRowBySessionToken(token);
-  if (!account) {
-    return { account: null, remainingMs: API_KEY_BLOCK_MS };
-  }
-
-  const blockedUntil = new Date(Date.now() + API_KEY_BLOCK_MS).toISOString();
-  await run(
-    `UPDATE app_accounts
-     SET api_key_blocked_until = ?, api_key_block_attempt_count = 0, updated_at = datetime('now')
-     WHERE id = ?`,
-    [blockedUntil, account.id]
-  );
-
-  return {
-    account,
-    remainingMs: API_KEY_BLOCK_MS
-  };
-}
-
-async function clearApiKeyBlockBySessionToken(token) {
-  const account = await getAccountRowBySessionToken(token);
-  if (!account) {
-    return null;
-  }
-
-  await clearApiKeyBlock(account.id);
-  return account;
-}
-
-async function forceLogoutForApiKeySpam(token) {
-  const account = await getAccountRowBySessionToken(token);
-  if (!account) {
-    return null;
-  }
-
-  await logoutAllAccountSessions(account.id);
-  return account;
-}
-
-async function clearApiKeyBlock(accountId) {
-  await run(
-    `UPDATE app_accounts
-     SET api_key_blocked_until = NULL, api_key_block_attempt_count = 0, updated_at = datetime('now')
-     WHERE id = ?`,
-    [accountId]
-  );
-}
-
 module.exports = {
-  blockApiKeyBySessionToken,
-  clearApiKeyBlockBySessionToken,
-  forceLogoutForApiKeySpam,
   getAccountBySessionToken,
-  getApiKeyBlockBySessionToken,
   loginAccount,
   logoutSession,
   registerAccount

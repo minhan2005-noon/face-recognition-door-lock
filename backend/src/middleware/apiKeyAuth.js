@@ -1,16 +1,9 @@
 const crypto = require('crypto');
-const { getSessionToken } = require('./sessionAuth');
-const {
-  blockApiKeyBySessionToken,
-  clearApiKeyBlockBySessionToken,
-  forceLogoutForApiKeySpam,
-  getApiKeyBlockBySessionToken
-} = require('../services/authService');
 
 const apiKey = process.env.API_KEY;
 let didWarnDisabledApiKey = false;
 
-async function apiKeyAuth(req, res, next) {
+function apiKeyAuth(req, res, next) {
   if (!apiKey) {
     if (process.env.NODE_ENV !== 'test' && !didWarnDisabledApiKey) {
       console.warn('API key protection is disabled. Set API_KEY to protect private routes.');
@@ -20,44 +13,17 @@ async function apiKeyAuth(req, res, next) {
     return;
   }
 
-  try {
-    const sessionToken = getSessionToken(req);
-    const providedKey = getProvidedApiKey(req);
-    const hasValidApiKey = isValidApiKey(providedKey);
-    const blockInfo = await getApiKeyBlockBySessionToken(sessionToken);
-
-    if (blockInfo.blocked) {
-      if (hasValidApiKey) {
-        await clearApiKeyBlockBySessionToken(sessionToken);
-        next();
-        return;
-      }
-
-      await forceLogoutForApiKeySpam(sessionToken);
-      res.status(440).json({
-        success: false,
-        message: 'Bạn đã thao tác API key khi đang bị chặn. Phiên đăng nhập đã bị đăng xuất.',
-        errorCode: 'API_KEY_SPAM_LOGOUT',
-        remainingMs: blockInfo.remainingMs
-      });
-      return;
-    }
-
-    if (!hasValidApiKey) {
-      const result = await blockApiKeyBySessionToken(sessionToken);
-      res.status(423).json({
-        success: false,
-        message: 'Mã truy cập không đúng. Phần cấu hình bị chặn trong 5 phút.',
-        errorCode: 'API_KEY_BLOCKED',
-        remainingMs: result.remainingMs
-      });
-      return;
-    }
-
-    next();
-  } catch (error) {
-    next(error);
+  const providedKey = getProvidedApiKey(req);
+  if (!isValidApiKey(providedKey)) {
+    res.status(401).json({
+      success: false,
+      message: 'Mã truy cập không đúng.',
+      errorCode: 'UNAUTHORIZED'
+    });
+    return;
   }
+
+  next();
 }
 
 function getProvidedApiKey(req) {
