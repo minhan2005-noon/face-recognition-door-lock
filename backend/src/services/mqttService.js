@@ -124,6 +124,19 @@ async function publishLockCommand(command) {
   });
 }
 
+async function publishDeviceCommand(command) {
+  return publishToDevice(command.deviceId, 'command', {
+    commandId: command.id,
+    action: command.action,
+    channel: command.channel,
+    value: command.value,
+    source: command.source,
+    reason: command.reason,
+    userId: command.userId,
+    createdAt: command.createdAt
+  });
+}
+
 async function publishRecognitionDecision(event) {
   return publishToDevice(event.deviceId, 'decision', {
     eventId: event.id,
@@ -157,6 +170,7 @@ function publishToDevice(deviceId, topicName, payload) {
 module.exports = {
   connectMqtt,
   getMqttStatus,
+  publishDeviceCommand,
   publishLockCommand,
   publishRecognitionDecision
 };

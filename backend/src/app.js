@@ -8,6 +8,7 @@ const devicesRoutes = require('./routes/devices');
 const healthRoutes = require('./routes/health');
 const lockRoutes = require('./routes/lock');
 const recognitionEventsRoutes = require('./routes/recognitionEvents');
+const smartHomeRoutes = require('./routes/smartHome');
 const usersRoutes = require('./routes/users');
 const apiKeyAuth = require('./middleware/apiKeyAuth');
 const errorHandler = require('./middleware/errorHandler');
@@ -26,6 +27,7 @@ app.use('/api/devices', devicesRoutes);
 app.use('/api/access-logs', accessLogsRoutes);
 app.use('/api/recognition-events', recognitionEventsRoutes);
 app.use('/api/lock', lockRoutes);
+app.use('/api/smart-home', smartHomeRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

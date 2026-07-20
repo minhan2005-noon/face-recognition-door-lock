@@ -9,3 +9,15 @@ dist/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.db
+
+# macOS/local generated files
+.DS_Store
+**/.DS_Store
+
+# Generated document render previews
+outputs/*-render*/
+
+# Xcode user-local state
+xcuserdata/
+*.xcuserstate
